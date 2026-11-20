@@ -42,12 +42,24 @@ def test_delivery_mode_never_live_in_test() -> None:
     )
     assert (
         email_delivery_mode(
-            Settings(app_env="production", resend_api_key="re_live", resend_from_email="BizPilot <a@b.c>")
+            Settings(
+                app_env="production",
+                resend_api_key="re_live",
+                resend_from_email="BizPilot <a@b.c>",
+                bizpilot_app_password="app-secret",
+            )
         )
         == "resend"
     )
     assert (
-        email_delivery_mode(Settings(app_env="production", resend_api_key="", resend_from_email="a@b.c"))
+        email_delivery_mode(
+            Settings(
+                app_env="production",
+                resend_api_key="",
+                resend_from_email="a@b.c",
+                bizpilot_app_password="app-secret",
+            )
+        )
         == "missing"
     )
 
@@ -112,7 +124,12 @@ async def test_send_email_calls_resend_outside_test(monkeypatch: pytest.MonkeyPa
 
 @pytest.mark.asyncio
 async def test_production_send_without_key_fails() -> None:
-    settings = Settings(app_env="production", resend_api_key="", resend_from_email="a@b.c")
+    settings = Settings(
+        app_env="production",
+        resend_api_key="",
+        resend_from_email="a@b.c",
+        bizpilot_app_password="app-secret",
+    )
     async with SessionLocal() as session:
         with pytest.raises(ApiError) as exc:
             await send_email(

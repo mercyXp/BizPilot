@@ -1,8 +1,10 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.core.dsn import app_async_url, owner_sync_url
 
 
 class Settings(BaseSettings):
@@ -18,8 +20,9 @@ class Settings(BaseSettings):
     secret_key: str = Field(default="change-me-in-development-only")
 
     database_url: str = "postgresql+asyncpg://bizpilot@127.0.0.1:55432/bizpilot"
-    database_url_sync: str = "postgresql+psycopg://bizpilot@127.0.0.1:55432/bizpilot"
+    database_url_sync: str = ""
     redis_url: str = "memory://"
+    bizpilot_app_password: str = ""
 
     cors_origins: str = "http://localhost:3000"
     log_level: str = "INFO"
@@ -44,6 +47,28 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY must not be empty")
         return value
 
+    @model_validator(mode="after")
+    def normalize_data_urls(self) -> Self:
+        object.__setattr__(
+            self,
+            "database_url_sync",
+            owner_sync_url(self.database_url, self.database_url_sync or None),
+        )
+        app_role = "bizpilot_app" if self.uses_managed_app_role else None
+        app_password = self.bizpilot_app_password.strip() or None
+        if self.uses_managed_app_role and not app_password:
+            raise ValueError("BIZPILOT_APP_PASSWORD is required in staging and production")
+        object.__setattr__(
+            self,
+            "database_url",
+            app_async_url(
+                self.database_url,
+                app_role=app_role,
+                app_password=app_password,
+            ),
+        )
+        return self
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
@@ -51,6 +76,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @property
+    def uses_managed_app_role(self) -> bool:
+        return self.app_env in {"staging", "production"}
 
     @property
     def requires_email_provider(self) -> bool:

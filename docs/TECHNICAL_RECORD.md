@@ -87,6 +87,9 @@ See `.env.example`. Never commit `.env`.
 | `PUBLIC_APP_URL` | Origin used in verification and invite links |
 | `RESEND_API_KEY` | Resend API key; empty in development/test (no live send) |
 | `RESEND_FROM_EMAIL` | Verified Resend from address, e.g. `BizPilot <noreply@domain>` |
+| `BIZPILOT_APP_PASSWORD` | Password for the `bizpilot_app` RLS role (Render generates this) |
+
+Production API hosting: Render Blueprint (`render.yaml`). Frontend: Vercel. See [render.md](render.md).
 
 ## Decision log (binding)
 

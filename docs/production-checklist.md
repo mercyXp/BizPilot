@@ -6,9 +6,11 @@ Do not mark a Zambia tax, mobile-money, or ZRA item live unless credentials and 
 
 - [ ] `APP_ENV=production`
 - [ ] `SECRET_KEY` is unique, stored in a secret manager, not in git
-- [ ] `DATABASE_URL` uses `bizpilot_app` (no `BYPASSRLS`)
+- [ ] API, Postgres, and Redis are on Render (blueprint in `render.yaml`; see [render.md](render.md))
+- [ ] `DATABASE_URL` uses `bizpilot_app` (no `BYPASSRLS`); Render injects the owner URL and the release command sets the app-role password
 - [ ] Alembic runs as a privileged owner (`DATABASE_URL_SYNC`) then the app uses the RLS role
 - [ ] `REDIS_URL` is a real Redis instance (`memory://` is development only)
+- [ ] Vercel `NEXT_PUBLIC_API_URL` is the Render API origin so `/api/v1` rewrites stay same-origin for cookies
 - [ ] `CORS_ORIGINS` lists only the production frontend origin
 - [ ] `PUBLIC_APP_URL` matches the public site
 - [ ] `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are set (domain verified in Resend)

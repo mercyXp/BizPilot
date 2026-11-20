@@ -32,7 +32,20 @@ def upgrade() -> None:
             """
         )
     )
-    op.execute(sa.text("GRANT CONNECT ON DATABASE bizpilot TO bizpilot_app"))
+    op.execute(
+        sa.text(
+            """
+            DO $$
+            BEGIN
+                EXECUTE format(
+                    'GRANT CONNECT ON DATABASE %I TO bizpilot_app',
+                    current_database()
+                );
+            END
+            $$;
+            """
+        )
+    )
     op.execute(sa.text("GRANT USAGE ON SCHEMA public TO bizpilot_app"))
     op.execute(
         sa.text(
