@@ -17,6 +17,7 @@ node_modules/
 frontend/.next/
 frontend/out/
 frontend/coverage/
+frontend/tsconfig.tsbuildinfo
 npm-debug.log*
 
 # Local infrastructure
