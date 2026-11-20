@@ -43,27 +43,24 @@ export default async function SignUpPage({
         : `${plan.name} is ${plan.monthlyKw === 0 ? "free" : `${formatKw(plan.monthlyKw)} per month`}, billed in ZMW. Create your organisation from the API today; the full sign-up screens ship with the app shell.`;
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb]">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <SiteHeader />
-      <main className="mx-auto max-w-lg px-6 py-16">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-600">
+      <main className="mx-auto w-full max-w-lg flex-1 px-6 py-16">
+        <p className="inline-flex rounded-full bg-blush px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink">
           Get started
         </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
-        <p className="mt-3 text-slate-600">{summary}</p>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink">{title}</h1>
+        <p className="mt-3 text-ink-muted">{summary}</p>
         {addon ? null : (
-          <p className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 shadow-sm">
+          <p className="mt-6 rounded-2xl border border-ink/10 bg-surface p-5 text-sm text-ink-muted shadow-sm">
             {plan.blurb}
           </p>
         )}
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/pricing"
-            className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
-          >
+          <Link href="/pricing" className="btn-primary">
             Back to pricing
           </Link>
-          <Link href="/" className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700">
+          <Link href="/" className="btn-outline">
             Home
           </Link>
         </div>

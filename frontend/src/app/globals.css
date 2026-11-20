@@ -2,11 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --canvas: #f1f5f9;
+  --surface: #ffffff;
+  --ink: #0f172a;
+  --brand: #0f766e;
+  --mint: #d1fae5;
+  --info: #dbeafe;
+  --highlight: #fde68a;
+  --blush: #fce7f3;
+  --lavender: #ede9fe;
+}
+
 html,
 body {
   min-height: 100%;
 }
 
 body {
-  @apply bg-[#f4f7fb] text-slate-900 antialiased;
+  @apply bg-canvas text-ink antialiased;
+}
+
+::selection {
+  background: #ccfbf1;
+  color: #0f172a;
+}
+
+@layer components {
+  .btn-primary {
+    @apply rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+  }
+
+  .btn-outline {
+    @apply rounded-lg bg-surface px-4 py-2.5 text-sm font-semibold text-ink ring-1 ring-ink/20 transition hover:bg-canvas hover:ring-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+  }
 }

@@ -5,24 +5,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        canvas: "#F1F5F9",
+        surface: "#FFFFFF",
         ink: {
-          950: "#0f172a",
-          800: "#1e293b",
-          500: "#64748b",
+          DEFAULT: "#0F172A",
+          muted: "#334155",
+          faint: "#475569",
         },
         brand: {
-          50: "#eef2ff",
-          100: "#dbe4ff",
-          500: "#3b5bdb",
-          600: "#2f4cd0",
-          700: "#2740b0",
+          50: "#F0FDFA",
+          100: "#CCFBF1",
+          500: "#0D9488",
+          600: "#0F766E",
+          700: "#115E59",
         },
+        mint: "#D1FAE5",
+        info: "#DBEAFE",
+        highlight: "#FDE68A",
+        blush: "#FCE7F3",
+        lavender: "#EDE9FE",
       },
       boxShadow: {
         card: "0 12px 40px -20px rgba(15, 23, 42, 0.25)",
       },
       backgroundImage: {
-        grid: "linear-gradient(to right, rgba(59, 91, 219, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 91, 219, 0.08) 1px, transparent 1px)",
+        grid: "linear-gradient(to right, rgba(15, 118, 110, 0.07) 1px, transparent 1px), linear-gradient(to bottom, rgba(15, 118, 110, 0.07) 1px, transparent 1px)",
       },
     },
   },

@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-[#f4f7fb]">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <SiteHeader active="pricing" />
-      <main>
+      <main className="flex-1">
         <PricingContent />
       </main>
       <SiteFooter />
