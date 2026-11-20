@@ -33,6 +33,7 @@ describe("PricingContent", () => {
     expect(screen.getAllByRole("link", { name: "Get Basic" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Get Premium" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Get Entreprise" }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("heading", { name: "Trusted by" })).toBeNull();
   });
 
   it("hides purchasing rows for Service Provider and lists services instead of products", () => {

@@ -149,14 +149,6 @@ export const PLANS: {
 export const ACCOUNTING_ADDON_KW = 650;
 export const PAYROLL_PER_EMPLOYEE_KW = 75;
 
-export const TRUSTED_BY = [
-  "FC Chatepa Bakery",
-  "FC Chatepa General Dealers",
-  "Zambia University College of Technology",
-  "Gulani Technologies Limited",
-  "Brecar",
-];
-
 export function featureLabel(storeType: StoreTypeId, feature: FeatureId): string {
   return FEATURE_LABELS[storeType][feature];
 }

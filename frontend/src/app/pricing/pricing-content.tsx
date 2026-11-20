@@ -9,7 +9,6 @@ import {
   PAYROLL_PER_EMPLOYEE_KW,
   PLANS,
   STORE_TYPES,
-  TRUSTED_BY,
   compareHeading,
   featureLabel,
   formatKw,
@@ -242,20 +241,6 @@ export function PricingContent() {
               </table>
             </div>
           </div>
-        </section>
-
-        <section className="mt-20 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-ink">Trusted by</h2>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {TRUSTED_BY.map((name) => (
-              <li
-                key={name}
-                className="rounded-2xl border border-ink/10 bg-surface px-4 py-6 text-sm font-semibold text-ink shadow-sm"
-              >
-                {name}
-              </li>
-            ))}
-          </ul>
         </section>
 
         <section id="accounting" className="mt-20 scroll-mt-24">
