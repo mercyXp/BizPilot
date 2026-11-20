@@ -15,8 +15,8 @@ export function SiteFooter() {
           <Link href="/pricing#payroll" className="hover:text-ink">
             Payroll
           </Link>
-          <Link href="/sign-up" className="hover:text-ink">
-            See Demo
+          <Link href="/demo" className="hover:text-ink">
+            Explore Live Demo
           </Link>
         </div>
       </div>

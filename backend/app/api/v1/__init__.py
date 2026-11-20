@@ -6,6 +6,7 @@ from app.api.v1.authorization import router as authorization_router
 from app.api.v1.branches import router as branches_router
 from app.api.v1.catalogue import router as catalogue_router
 from app.api.v1.customers import router as customers_router
+from app.api.v1.demo import router as demo_router
 from app.api.v1.health import router as health_router
 from app.api.v1.inventory import router as inventory_router
 from app.api.v1.invitations import router as invitations_router
@@ -20,6 +21,7 @@ from app.api.v1.warehouses import router as warehouses_router
 api_router = APIRouter()
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
+api_router.include_router(demo_router)
 api_router.include_router(organizations_router)
 api_router.include_router(branches_router)
 api_router.include_router(warehouses_router)

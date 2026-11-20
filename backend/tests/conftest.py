@@ -1,6 +1,7 @@
 import os
 
 os.environ.setdefault("APP_ENV", "test")
+os.environ.setdefault("DEMO_COMPACT", "true")
 os.environ.setdefault(
     "DATABASE_URL",
     "postgresql+asyncpg://bizpilot_app@127.0.0.1:55432/bizpilot",

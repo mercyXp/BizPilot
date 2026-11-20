@@ -154,10 +154,13 @@ export function LandingView({ apiOk }: { apiOk: boolean }) {
           </motion.p>
           <motion.div variants={item} className="mt-7 flex flex-wrap gap-3">
             <Button href="/sign-up" size="lg" arrow>
-              Start free
+              Start free trial
             </Button>
             <Button href="/sign-in" size="lg" variant="outline">
               Sign in
+            </Button>
+            <Button href="/demo" size="lg" variant="outline">
+              Explore Live Demo
             </Button>
           </motion.div>
           <motion.p variants={item} className="mt-4 text-xs text-muted">

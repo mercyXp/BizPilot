@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isNavActive, navGroups, settingsItem } from "./nav";
+import { canSeeNavItem, isNavActive, navGroups, settingsItem } from "./nav";
 
 describe("store navigation", () => {
   it("groups modules in the screenshot information architecture", () => {
@@ -23,5 +23,14 @@ describe("store navigation", () => {
     expect(isNavActive("/app", "/app")).toBe(true);
     expect(isNavActive("/app/sales", "/app")).toBe(false);
     expect(isNavActive("/app/sales/returns", "/app/sales")).toBe(true);
+  });
+
+  it("hides accounting from a salesperson permission set", () => {
+    const accounting = navGroups
+      .flatMap((group) => group.items)
+      .find((item) => item.href === "/app/accounting");
+    expect(accounting).toBeDefined();
+    expect(canSeeNavItem(accounting!, ["sales.view", "sales.create", "pos.session.open"])).toBe(false);
+    expect(canSeeNavItem(accounting!, ["accounting.reports.view"])).toBe(true);
   });
 });

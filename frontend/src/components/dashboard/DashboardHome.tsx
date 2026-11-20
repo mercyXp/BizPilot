@@ -24,10 +24,14 @@ function firstName(fullName: string, email: string): string {
 }
 
 export function DashboardHome() {
-  const { user, currentOrg } = useAuth();
+  const { user, currentOrg, demoSnapshot, isDemo } = useAuth();
   const reduce = useReducedMotion();
   const name = user ? firstName(user.full_name, user.email) : "there";
   const store = currentOrg?.name ?? "your store";
+  const revenue = isDemo ? demoSnapshot?.kpis.monthly_revenue ?? 0 : 0;
+  const expenses = isDemo ? demoSnapshot?.kpis.monthly_expenses ?? 0 : 0;
+  const products = isDemo ? demoSnapshot?.kpis.products ?? 0 : 0;
+  const profit = revenue - expenses;
 
   return (
     <div className="space-y-6">
@@ -51,10 +55,10 @@ export function DashboardHome() {
         animate="show"
       >
         {[
-          { label: "Today’s sales", value: 0, format: "currency" as const, icon: ShoppingBag, tone: "brand" as const },
-          { label: "Items sold", value: 0, format: "number" as const, icon: Package, tone: "sales" as const },
-          { label: "Profit", value: 0, format: "currency" as const, icon: TrendingUp, tone: "profit" as const },
-          { label: "Low stock", value: 0, format: "number" as const, icon: AlertTriangle, tone: "warning" as const },
+          { label: "Monthly revenue", value: revenue, format: "currency" as const, icon: ShoppingBag, tone: "brand" as const },
+          { label: "Catalogue", value: products, format: "number" as const, icon: Package, tone: "sales" as const },
+          { label: "Profit", value: profit, format: "currency" as const, icon: TrendingUp, tone: "profit" as const },
+          { label: "Expenses", value: expenses, format: "currency" as const, icon: AlertTriangle, tone: "warning" as const },
         ].map((kpi) => (
           <motion.div key={kpi.label} variants={withReducedMotion(reduce, kpiVariants)}>
             <KpiCard

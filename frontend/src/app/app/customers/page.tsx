@@ -1,14 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 
+import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
+import { readError } from "@/lib/api";
+
+type Customer = { id: string; code: string; name: string; is_active: boolean };
 
 export default function CustomersPage() {
+  const { tenantFetch, permissions } = useAuth();
+  const [rows, setRows] = useState<Customer[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!permissions.includes("customers.manage")) return;
+    void tenantFetch("/api/v1/customers").then(async (response) => {
+      if (!response.ok) {
+        setError(await readError(response));
+        return;
+      }
+      setRows((await response.json()) as Customer[]);
+    });
+  }, [permissions, tenantFetch]);
+
   return (
     <div>
       <PageHeader
@@ -33,7 +53,7 @@ export default function CustomersPage() {
         </p>
       </div>
       <div className="mb-3 flex gap-2">
-        <Badge tone="muted">All customers (0)</Badge>
+        <Badge tone="muted">All customers ({rows.length})</Badge>
         <Badge tone="warning">Owes money (0)</Badge>
       </div>
       <Card className="overflow-hidden">
@@ -48,11 +68,32 @@ export default function CustomersPage() {
             </tr>
           </thead>
           <tbody>
+            {error ? (
+              <tr>
+                <td colSpan={8} className="px-3 py-8 text-center text-sm text-danger">
+                  {error}
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
             <tr>
               <td colSpan={8} className="px-3 py-16 text-center text-sm text-muted">
                 No customers yet. Add one to track sales on account.
               </td>
             </tr>
+            ) : (
+              rows.slice(0, 40).map((row) => (
+                <tr key={row.id}>
+                  <td className="px-3 py-2">{row.code}</td>
+                  <td className="px-3 py-2">{row.name}</td>
+                  <td className="px-3 py-2 text-secondary">—</td>
+                  <td className="px-3 py-2">ZMW 0.00</td>
+                  <td className="px-3 py-2 text-secondary">—</td>
+                  <td className="px-3 py-2">—</td>
+                  <td className="px-3 py-2">Lusaka</td>
+                  <td className="px-3 py-2">{row.is_active ? "Active" : "Inactive"}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </Card>

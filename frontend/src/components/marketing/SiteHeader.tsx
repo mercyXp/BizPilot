@@ -74,7 +74,7 @@ export function SiteHeader({ active = "home" }: SiteHeaderProps) {
               Login
             </Link>
             <Link
-              href="/#demo"
+              href="/demo"
               className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             >
               See Demo
@@ -130,7 +130,7 @@ export function SiteHeader({ active = "home" }: SiteHeaderProps) {
               Login
             </Link>
             <Link
-              href="/#demo"
+              href="/demo"
               className="mt-1 inline-flex w-fit rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white"
               onClick={() => setOpen(false)}
             >

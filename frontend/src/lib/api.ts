@@ -69,11 +69,41 @@ export async function fetchHealthReady(): Promise<{
   }
 }
 
+export type DemoSnapshot = {
+  organization: {
+    id: string;
+    name: string;
+    legal_name: string | null;
+    industry: string;
+    location: string;
+    currency: string;
+    demo_key: string;
+  };
+  kpis: {
+    monthly_revenue: number;
+    monthly_expenses: number;
+    products: number;
+    branches: number;
+    journals: number;
+  };
+  branches: { id: string; code: string; name: string }[];
+  role: string | null;
+  role_title: string | null;
+  is_demo: boolean;
+  access: { roles_explored?: string[]; modules_visited?: string[] };
+};
+
 export async function apiFetch(
   path: string,
-  options: RequestInit & { accessToken?: string; organizationId?: string; csrfToken?: string } = {},
+  options: RequestInit & {
+    accessToken?: string;
+    organizationId?: string;
+    branchId?: string;
+    csrfToken?: string;
+    idempotencyKey?: string;
+  } = {},
 ): Promise<Response> {
-  const { accessToken, organizationId, csrfToken, headers, ...rest } = options;
+  const { accessToken, organizationId, branchId, csrfToken, idempotencyKey, headers, ...rest } = options;
   const merged = new Headers(headers);
   merged.set("Content-Type", "application/json");
   if (accessToken) {
@@ -82,8 +112,14 @@ export async function apiFetch(
   if (organizationId) {
     merged.set("X-Organization-Id", organizationId);
   }
+  if (branchId) {
+    merged.set("X-Branch-Id", branchId);
+  }
   if (csrfToken) {
     merged.set("X-CSRF-Token", csrfToken);
+  }
+  if (idempotencyKey) {
+    merged.set("Idempotency-Key", idempotencyKey);
   }
   return fetch(`${clientApiBase()}${path}`, {
     ...rest,

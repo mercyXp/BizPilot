@@ -2,16 +2,21 @@
 
 import { useState } from "react";
 
+import { useAuth } from "@/components/AuthProvider";
 import { AiAvailability, AiInsightCard, TypingIndicator } from "@/components/ai/AiStates";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
+import { readError } from "@/lib/api";
 
 export default function AssistantPage() {
+  const { isDemo, tenantFetch, permissions } = useAuth();
   const [draft, setDraft] = useState("");
   const [demo, setDemo] = useState<"idle" | "loading" | "completed" | "failed">("idle");
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div>
@@ -29,7 +34,30 @@ export default function AssistantPage() {
             onChange={(event) => setDraft(event.target.value)}
           />
           <div className="mt-3 flex gap-2">
-            <Button disabled={!draft} onClick={() => setDemo("loading")}>
+            <Button
+              disabled={!draft || !permissions.includes("ai.use")}
+              onClick={() => {
+                if (isDemo) {
+                  setDemo("loading");
+                  setError(null);
+                  void tenantFetch("/api/v1/demo/ask", {
+                    method: "POST",
+                    body: JSON.stringify({ question: draft }),
+                  }).then(async (response) => {
+                    if (!response.ok) {
+                      setDemo("failed");
+                      setError(await readError(response));
+                      return;
+                    }
+                    const body = (await response.json()) as { answer: string };
+                    setAnswer(body.answer);
+                    setDemo("completed");
+                  });
+                  return;
+                }
+                setDemo("loading");
+              }}
+            >
               Send
             </Button>
             <Button variant="outline" onClick={() => setDemo("completed")}>
@@ -50,8 +78,13 @@ export default function AssistantPage() {
             ) : null}
             {demo === "completed" ? (
               <AiInsightCard title="Store insight" state="completed">
-                This is a visual preview only. Live answers wait for the AI phase and a confirmed tool result.
+                {answer ?? "This is a visual preview only. Live answers wait for the AI phase and a confirmed tool result."}
               </AiInsightCard>
+            ) : null}
+            {error ? (
+              <Alert tone="critical" title="Assistant error">
+                {error}
+              </Alert>
             ) : null}
             {demo === "failed" ? (
               <Alert tone="critical" title="Generation failed">

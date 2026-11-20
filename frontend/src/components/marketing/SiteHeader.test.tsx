@@ -22,7 +22,9 @@ describe("marketing header", () => {
     const logo = screen.getByAltText("BizPilot");
     expect(logo.getAttribute("src")).toBe(LOGO_SRC);
     expect(LOGO_SRC).toBe("/logo/BizPilot_logo.png");
-    expect(screen.getAllByText("See Demo").length).toBeGreaterThan(0);
+    const demoLinks = screen.getAllByRole("link", { name: "See Demo" });
+    expect(demoLinks.length).toBeGreaterThan(0);
+    expect(demoLinks.every((link) => link.getAttribute("href") === "/demo")).toBe(true);
     expect(screen.queryByText("Book a Demo")).toBeNull();
     expect(screen.getByText("Home")).toBeTruthy();
     expect(screen.getByText("Solutions")).toBeTruthy();

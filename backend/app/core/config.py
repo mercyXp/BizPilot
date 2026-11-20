@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     auth_cookie_name: str = "bp_refresh"
     auth_rate_limit_attempts: int = 10
     auth_rate_limit_window_seconds: int = 900
+    demo_enabled: bool = True
+    demo_compact: bool = False
 
     @field_validator("secret_key")
     @classmethod

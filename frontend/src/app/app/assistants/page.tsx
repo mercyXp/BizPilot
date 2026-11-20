@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, UserPlus } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,22 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Alert } from "@/components/ui/alert";
 import { apiFetch, readError } from "@/lib/api";
 
+type Member = { id: string; email: string; full_name: string; role_codes: string[]; status: string };
+
 export default function AssistantsPage() {
-  const { accessToken, currentOrg } = useAuth();
+  const { accessToken, currentOrg, tenantFetch, permissions } = useAuth();
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteOk, setInviteOk] = useState(false);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+
+  useEffect(() => {
+    if (!permissions.includes("users.manage")) return;
+    void tenantFetch("/api/v1/memberships").then(async (response) => {
+      if (response.ok) setMembers((await response.json()) as Member[]);
+    });
+  }, [permissions, tenantFetch]);
 
   async function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,6 +100,21 @@ export default function AssistantsPage() {
       ) : null}
 
       <h2 className="mb-2 text-sm font-semibold text-ink">Active assistants</h2>
+      {members.length ? (
+        <Card className="mb-4 overflow-hidden">
+          <ul className="divide-y divide-border text-sm">
+            {members.map((member) => (
+              <li key={member.id} className="flex items-center justify-between px-3 py-2">
+                <span>
+                  <span className="font-medium text-ink">{member.full_name}</span>
+                  <span className="ml-2 text-secondary">{member.email}</span>
+                </span>
+                <span className="text-xs text-muted">{member.role_codes.join(", ")}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : (
       <EmptyState
         icon={UserPlus}
         title="No active assistants"
@@ -100,6 +125,7 @@ export default function AssistantsPage() {
           </Button>
         }
       />
+      )}
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-ink">Pending invitations</h2>
       <EmptyState

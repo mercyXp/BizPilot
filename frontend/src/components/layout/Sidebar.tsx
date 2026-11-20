@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
-import { isNavActive, navGroups, settingsItem, type NavItem } from "@/lib/nav";
+import { canSeeNavItem, isNavActive, navGroups, settingsItem, type NavItem } from "@/lib/nav";
+import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/cn";
 import { Logo, LogoMark } from "@/components/ui/logo";
 import { navIcons } from "@/components/layout/NavIcons";
@@ -19,6 +20,8 @@ function NavLink({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { permissions } = useAuth();
+  if (!canSeeNavItem(item, permissions)) return null;
   const active = isNavActive(pathname, item.href);
   const Icon = navIcons[item.icon];
 
