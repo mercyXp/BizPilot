@@ -23,6 +23,15 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:3000"
     log_level: str = "INFO"
+    public_app_url: str = "http://localhost:3000"
+    access_token_minutes: int = 15
+    refresh_token_days: int = 14
+    email_token_hours: int = 24
+    password_reset_hours: int = 2
+    invitation_days: int = 7
+    auth_cookie_name: str = "bp_refresh"
+    auth_rate_limit_attempts: int = 10
+    auth_rate_limit_window_seconds: int = 900
 
     @field_validator("secret_key")
     @classmethod

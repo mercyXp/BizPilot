@@ -1,7 +1,7 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phase 1 complete  
+**Status:** Phase 2 complete  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
@@ -36,18 +36,22 @@ This file is the index of approved product and technical decisions. Do not contr
 | --- | --- | --- |
 | 0 | Product specification and architecture | Completed (approved by proceeding to Phase 1) |
 | 1 | Project foundation | Completed |
-| 2 | Authentication and multi-tenancy | Not started |
+| 2 | Authentication and multi-tenancy | Completed |
 | 3–15 | See roadmap | Not started |
 
 ## Implemented modules
 
-- `backend/app/core` — config, logging, errors, DB, cache, middleware
+- `backend/app/core` — config, logging, errors, DB, cache, middleware, JWT, RLS helpers
 - `backend/app/api/v1/health` — live and ready checks
-- `frontend` — Next.js 15.5.7 App Router home page consuming `/api/v1/health/ready`
+- `backend/app/api/v1/auth` — register, login, refresh, logout, verify, password reset
+- `backend/app/api/v1/organizations` — create org, memberships, invitations
+- `frontend` — sign-in/up, verify, reset, org switcher at `/app`
 
 ## Completed migrations
 
 - `20261120_0001` — `app_metadata` with `schema_phase=1`
+- `20261120_0002` — users, sessions, orgs, memberships, invitations, RLS, `bizpilot_app`
+- `20261120_0003` — organization SELECT policy so INSERT RETURNING works for the creator
 
 ## Environment variables
 
@@ -62,6 +66,7 @@ See `.env.example`. Never commit `.env`.
 | `REDIS_URL` | `redis://...` or `memory://` |
 | `CORS_ORIGINS` | comma-separated browser origins |
 | `NEXT_PUBLIC_API_URL` | FastAPI origin for the Next.js app |
+| `PUBLIC_APP_URL` | Origin used in verification and invite links |
 
 ## Decision log (binding)
 

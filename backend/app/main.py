@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -18,6 +19,8 @@ async def lifespan(_app: FastAPI):
     await get_cache()
     yield
     await close_cache()
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
     await engine.dispose()
 
 

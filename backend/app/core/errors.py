@@ -1,9 +1,21 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import request_id_ctx
+
+logger = logging.getLogger(__name__)
+
+
+class ApiError(Exception):
+    def __init__(self, status_code: int, code: str, message: str) -> None:
+        self.status_code = status_code
+        self.code = code
+        self.message = message
+        super().__init__(message)
 
 
 def _error_body(code: str, message: str, details: list | None = None) -> dict:
@@ -18,6 +30,13 @@ def _error_body(code: str, message: str, details: list | None = None) -> dict:
 
 
 def register_error_handlers(app: FastAPI) -> None:
+    @app.exception_handler(ApiError)
+    async def api_error_handler(_request: Request, exc: ApiError) -> JSONResponse:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=_error_body(exc.code, exc.message),
+        )
+
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
         code = "http_error"
@@ -29,7 +48,10 @@ def register_error_handlers(app: FastAPI) -> None:
             code = "permission_denied"
         elif exc.status_code == 409:
             code = "conflict"
-        return JSONResponse(status_code=exc.status_code, content=_error_body(code, str(exc.detail)))
+        elif exc.status_code == 429:
+            code = "rate_limited"
+        message = exc.detail if isinstance(exc.detail, str) else "Request failed"
+        return JSONResponse(status_code=exc.status_code, content=_error_body(code, message))
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -40,7 +62,8 @@ def register_error_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def unhandled_handler(_request: Request, _exc: Exception) -> JSONResponse:
+    async def unhandled_handler(_request: Request, exc: Exception) -> JSONResponse:
+        logger.exception("Unhandled error: %s", exc)
         return JSONResponse(
             status_code=500,
             content=_error_body("internal_error", "An unexpected error occurred"),

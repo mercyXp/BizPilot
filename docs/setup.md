@@ -20,13 +20,9 @@ Do not commit `.env`. `SECRET_KEY` in the example is for local development only.
 
 `REDIS_URL=memory://` is allowed in development when Redis is not installed. Production must use a real Redis URL.
 
-If you use `docker compose up -d`, set:
+The API runtime role is `bizpilot_app` (no RLS bypass). Alembic uses the cluster owner `bizpilot`.
 
-```
-DATABASE_URL=postgresql+asyncpg://bizpilot:bizpilot@127.0.0.1:55432/bizpilot
-DATABASE_URL_SYNC=postgresql+psycopg://bizpilot:bizpilot@127.0.0.1:55432/bizpilot
-REDIS_URL=redis://127.0.0.1:6379/0
-```
+If you use `docker compose up -d`, still run Alembic as the superuser, then point `DATABASE_URL` at `bizpilot_app`.
 
 ## PostgreSQL (local, no Docker)
 
