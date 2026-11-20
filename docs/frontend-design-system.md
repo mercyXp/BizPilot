@@ -6,14 +6,14 @@ Light theme only. Teal is the brand. Other colour is semantic.
 
 | Token | Hex |
 | --- | --- |
-| Primary text | `#000000` |
+| Primary text | `#0F172A` |
 | Brand | `#0D9488` |
 | Deep teal | `#0F766E` |
 | Soft teal | `#CCFBF1` |
-| Background | `#F8FAFC` |
+| Background | `#F1F5F9` |
 | Surface | `#FFFFFF` |
 | Border | `#E5E7EB` |
-| Secondary text | `#525252` |
+| Secondary text | `#334155` |
 
 Typography: Inter (`--font-sans`). Geist may replace it later without changing colour.
 

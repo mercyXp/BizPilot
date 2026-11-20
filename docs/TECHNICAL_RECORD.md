@@ -87,3 +87,6 @@ Phase 1 additions:
 - **D26:** Local PostgreSQL cluster in `.data/postgres` on port 55432 when Docker is unavailable.
 - **D27:** Development may use `REDIS_URL=memory://`. Production must use Redis.
 - **D28:** This workstation cannot reach `registry.npmjs.org` (HTTP 403). Frontend installs use `https://registry.npmmirror.com` via `frontend/.npmrc`.
+
+- **D31:** Marketing header uses `Logo` / `frontend/public/logo/BizPilot_logo.png` only. Nav: Home (teal bar above the active item), Solutions and Industries with chevrons, Pricing, About Us, Contact, Login, and a rounded teal pill **See Demo** (not Book a Demo).
+- **D32:** Palette updates flow through main tokens (`frontend/src/lib/colors.ts` and `globals.css`): ink `#0F172A`, canvas `#F1F5F9`, secondary `#334155`. Brand teal stays `#0D9488` / `#0F766E` / `#CCFBF1`.

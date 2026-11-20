@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
@@ -59,9 +60,9 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Starter", price: "Free trial", body: "One organisation, core operations, invitations.", cta: "Create account", href: "/sign-up", featured: false },
-  { name: "Growth", price: "Talk to us", body: "Multi-store, reporting pack, ZRA Smart Invoice when enrolled.", cta: "Start with Growth", href: "/sign-up", featured: true },
-  { name: "Enterprise", price: "Custom", body: "SSO, dedicated support and industry packs as configuration.", cta: "Contact sales", href: "/sign-up", featured: false },
+  { name: "Basic", price: "Free", body: "Sales, sales returns, customers and expense tracking.", cta: "Get Basic", href: "/sign-up?plan=basic", featured: false },
+  { name: "Premium", price: "K320", body: "Inventory, purchasing, reports and store assistants. Billed monthly in ZMW.", cta: "Get Premium", href: "/sign-up?plan=premium", featured: true },
+  { name: "Entreprise", price: "K490", body: "AI assistant, ZRA Smart Invoice and integrations. Manufacturing stays off.", cta: "Get Entreprise", href: "/sign-up?plan=enterprise", featured: false },
 ];
 
 function DashboardPreview() {
@@ -163,10 +164,12 @@ export function LandingView({ apiOk }: { apiOk: boolean }) {
             API {apiOk ? "connected" : "unreachable"} · English first · ZMW default
           </motion.p>
         </div>
-        <DashboardPreview />
+        <div id="demo">
+          <DashboardPreview />
+        </div>
       </motion.section>
 
-      <section className="relative mx-auto max-w-6xl px-6 py-16">
+      <section id="pos" className="relative mx-auto max-w-6xl scroll-mt-24 px-6 py-16">
         <Reveal>
           <h2 className="text-2xl font-semibold text-ink">Built for day-to-day operations</h2>
           <p className="mt-2 max-w-2xl text-sm text-secondary">
@@ -223,7 +226,13 @@ export function LandingView({ apiOk }: { apiOk: boolean }) {
       <section className="relative mx-auto max-w-6xl px-6 py-16">
         <Reveal>
           <h2 className="text-2xl font-semibold text-ink">Simple plans</h2>
-          <p className="mt-2 text-sm text-secondary">Start with one organisation. Expand when the shop is ready.</p>
+          <p className="mt-2 text-sm text-secondary">
+            Basic is free. Premium is K320 a month. Entreprise is K490.{" "}
+            <Link href="/pricing" className="font-medium text-brand hover:text-brand-deep">
+              Compare what each store type gets
+            </Link>
+            .
+          </p>
         </Reveal>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {plans.map((plan, index) => (
