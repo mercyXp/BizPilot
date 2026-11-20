@@ -51,7 +51,7 @@ type AuthState = {
   selectOrg: (org: OrganizationPublic) => void;
   selectBranch: (id: string) => void;
   reloadMemberships: () => Promise<void>;
-  enterDemo: (role: string) => Promise<void>;
+  enterDemo: (role: string, options?: { business?: string; branchCode?: string }) => Promise<void>;
   switchDemoRole: (role: string) => Promise<void>;
   resetDemo: () => Promise<void>;
   tenantFetch: (path: string, options?: RequestInit & { idempotencyKey?: string }) => Promise<Response>;
@@ -79,9 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (snapshot?.branches?.length) {
       setBranches(snapshot.branches);
       const stored = getStoredBranchId();
-      const selected = snapshot.branches.find((row) => row.id === stored) ?? snapshot.branches[0];
-      setBranchId(selected.id);
-      setStoredBranchId(selected.id);
+      const preferred = snapshot.preferred_branch_id;
+      const selected =
+        snapshot.branches.find((row) => row.id === preferred) ??
+        snapshot.branches.find((row) => row.id === stored) ??
+        snapshot.branches[0];
+      if (selected) {
+        setBranchId(selected.id);
+        setStoredBranchId(selected.id);
+      }
     }
   }, []);
 
@@ -201,10 +207,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [accessToken, loadMemberships]);
 
   const enterDemo = useCallback(
-    async (role: string) => {
+    async (role: string, options?: { business?: string; branchCode?: string }) => {
       const response = await apiFetch("/api/v1/demo/enter", {
         method: "POST",
-        body: JSON.stringify({ role }),
+        body: JSON.stringify({
+          role,
+          business: options?.business ?? "mwamba",
+          branch_code: options?.branchCode ?? null,
+        }),
       });
       if (!response.ok) {
         throw new Error("Could not open the live demo");

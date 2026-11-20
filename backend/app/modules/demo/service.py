@@ -12,15 +12,15 @@ from app.models.audit import AuditLog
 from app.models.user import User
 from app.modules.accounting.models import Expense, JournalEntry
 from app.modules.catalogue.models import Product, ProductPrice, ProductVariant
+from app.modules.demo.catalog import public_centre, business_by_slug
 from app.modules.demo.constants import (
     DEMO_EMAIL_DOMAIN,
-    DEMO_LEGAL_NAME,
-    DEMO_ORG_NAME,
     DEMO_ROLES,
     DEMO_SLUG,
+    demo_email,
     role_by_key,
 )
-from app.modules.demo.seed import seed_mwamba
+from app.modules.demo.seed import seed_demo_business
 from app.modules.identity import service as identity
 from app.modules.inventory.models import StockBalance
 from app.modules.sales.models import Sale
@@ -62,15 +62,20 @@ async def enter_role(
     user_agent: str | None,
     ip: str | None,
     reset: bool = False,
+    business: str = DEMO_SLUG,
+    branch_code: str | None = None,
 ) -> tuple[User, str, str, str, dict]:
     assert_demo_enabled(settings)
     try:
         spec = role_by_key(role_key)
+        biz = business_by_slug(business)
     except KeyError as exc:
-        raise AppError(422, "Unknown demo role", code="validation_error") from exc
+        raise AppError(422, "Unknown demo role or business", code="validation_error") from exc
 
-    org = await seed_mwamba(session, compact=demo_compact(settings), reset=reset)
-    user = await session.scalar(select(User).where(User.email == spec["email"]))
+    org = await seed_demo_business(
+        session, slug=biz["slug"], compact=demo_compact(settings), reset=reset
+    )
+    user = await session.scalar(select(User).where(User.email == demo_email(biz["slug"], spec["key"])))
     if user is None:
         raise AppError(500, "Demo account is missing", code="internal_error")
     issued = await identity.issue_session(
@@ -78,7 +83,13 @@ async def enter_role(
     )
     _user, _db_session, access, refresh, csrf = issued
     await track_event(session, org.id, user.id, role=spec["key"], module="entry", action="enter")
-    snapshot = await snapshot_for(session, org.id, user_id=user.id, email=user.email)
+    snapshot = await snapshot_for(
+        session,
+        org.id,
+        user_id=user.id,
+        email=user.email,
+        preferred_branch_code=branch_code,
+    )
     return user, access, refresh, csrf, snapshot
 
 
@@ -93,8 +104,15 @@ async def switch_role(
 ) -> tuple[User, str, str, str, dict]:
     if not is_demo_user(current):
         raise AppError(403, "Role switching is only available in the demo", code="permission_denied")
+    slug = current.email.split("@")[0].rsplit(".", 1)[0] if "." in current.email.split("@")[0] else DEMO_SLUG
     return await enter_role(
-        session, settings, role_key=role_key, user_agent=user_agent, ip=ip, reset=False
+        session,
+        settings,
+        role_key=role_key,
+        user_agent=user_agent,
+        ip=ip,
+        reset=False,
+        business=slug,
     )
 
 
@@ -109,8 +127,15 @@ async def reset_demo(
 ) -> tuple[User, str, str, str, dict]:
     if not is_demo_user(current):
         raise AppError(403, "Demo reset is only available in the demo", code="permission_denied")
+    slug = current.email.split("@")[0].rsplit(".", 1)[0] if "." in current.email.split("@")[0] else DEMO_SLUG
     return await enter_role(
-        session, settings, role_key=role_key, user_agent=user_agent, ip=ip, reset=True
+        session,
+        settings,
+        role_key=role_key,
+        user_agent=user_agent,
+        ip=ip,
+        reset=True,
+        business=slug,
     )
 
 
@@ -155,7 +180,12 @@ async def track_event(
 
 
 async def snapshot_for(
-    session: AsyncSession, organization_id: UUID, *, user_id: UUID, email: str
+    session: AsyncSession,
+    organization_id: UUID,
+    *,
+    user_id: UUID,
+    email: str,
+    preferred_branch_code: str | None = None,
 ) -> dict:
     await set_request_context(session, user_id=user_id, organization_id=organization_id)
     revenue = await session.scalar(
@@ -183,17 +213,31 @@ async def snapshot_for(
     access = {}
     if settings_row and isinstance(settings_row.settings, dict):
         access = settings_row.settings.get("demo_access") or {}
-    spec = next((item for item in DEMO_ROLES if item["email"] == email), None)
+    demo_key = DEMO_SLUG
+    if settings_row and isinstance(settings_row.settings, dict):
+        demo_key = str(settings_row.settings.get("demo_key") or DEMO_SLUG)
+    try:
+        biz = business_by_slug(demo_key)
+    except KeyError:
+        biz = business_by_slug(DEMO_SLUG)
+    local = email.split("@")[0]
+    role_key = local.rsplit(".", 1)[-1] if "." in local else None
+    spec = next((item for item in DEMO_ROLES if item["key"] == role_key), None)
+    preferred = None
+    if preferred_branch_code:
+        preferred = next((row for row in branches if row.code == preferred_branch_code), None)
     return {
         "organization": {
             "id": str(organization_id),
-            "name": DEMO_ORG_NAME,
-            "legal_name": DEMO_LEGAL_NAME,
-            "industry": "Retail and wholesale",
-            "location": "Lusaka, Zambia",
+            "name": biz["name"],
+            "legal_name": biz["legal_name"],
+            "industry": biz["size_label"],
+            "location": f"{biz['branches'][0]['city']}, Zambia",
             "currency": "ZMW",
-            "demo_key": DEMO_SLUG,
+            "demo_key": biz["slug"],
         },
+        "access_all_branches": bool(spec["access_all_branches"] if spec else True),
+        "preferred_branch_id": str(preferred.id) if preferred else None,
         "kpis": {
             "monthly_revenue": float(revenue or 0),
             "monthly_expenses": float(expenses or 0),
@@ -289,7 +333,7 @@ async def answer_question(session: AsyncSession, ctx: TenantContext, question: s
     q = question.lower()
     if "expense" in q:
         return (
-            f"Mwamba Retail Group recorded ZMW {kpis['monthly_expenses']:,.0f} in operating expenses "
+            f"{snap['organization']['name']} recorded ZMW {kpis['monthly_expenses']:,.0f} in operating expenses "
             "this period. Rent, ZESCO and restocking are the largest posted costs."
         )
     if "stock" in q or "inventory" in q:
@@ -301,7 +345,7 @@ async def answer_question(session: AsyncSession, ctx: TenantContext, question: s
         names = ", ".join(row["name"] for row in snap["branches"])
         return f"The group trades from {names}. Compare branch sales from the owner dashboard."
     return (
-        f"This month Mwamba posted about ZMW {kpis['monthly_revenue']:,.0f} in completed sales "
+        f"This month this demo business posted about ZMW {kpis['monthly_revenue']:,.0f} in completed sales "
         f"against ZMW {kpis['monthly_expenses']:,.0f} expenses, with {kpis['journals']} journal entries "
         "tying POS, stock and the ledger together."
     )
@@ -311,6 +355,16 @@ async def require_demo_org(session: AsyncSession, ctx: TenantContext) -> None:
     await set_request_context(session, user_id=ctx.user_id, organization_id=ctx.organization_id)
     from app.models.organization import Organization
 
+    from app.modules.tenancy.models import OrganizationSettings as OrgSettings
+
     org = await session.get(Organization, ctx.organization_id)
-    if org is None or org.name != DEMO_ORG_NAME:
+    settings_row = await session.scalar(
+        select(OrgSettings).where(OrgSettings.organization_id == ctx.organization_id)
+    )
+    is_demo = bool(
+        settings_row
+        and isinstance(settings_row.settings, dict)
+        and settings_row.settings.get("is_demo")
+    )
+    if org is None or not is_demo:
         raise AppError(403, "This action is limited to the demo tenant", code="permission_denied")

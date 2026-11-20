@@ -18,6 +18,8 @@ router = APIRouter(prefix="/demo", tags=["demo"])
 
 class EnterIn(BaseModel):
     role: str = Field(min_length=2, max_length=32)
+    business: str = Field(default="mwamba", min_length=2, max_length=64)
+    branch_code: str | None = Field(default=None, max_length=16)
 
 
 class EventIn(BaseModel):
@@ -40,14 +42,22 @@ def _client_ip(request: Request) -> str | None:
 @router.get("/roles")
 async def roles(settings: Settings = Depends(get_settings)) -> dict:
     demo.assert_demo_enabled(settings)
+    centre = demo.public_centre()
     return {
         "business": {
-            "name": "Mwamba Retail Group",
-            "tagline": "Retail and wholesale · Lusaka, Zambia",
+            "name": "BizPilot Demo Centre",
+            "tagline": "Industry → business → branch → role",
             "currency": "ZMW",
         },
         "roles": demo.public_roles(),
+        "centre": centre,
     }
+
+
+@router.get("/centre")
+async def centre(settings: Settings = Depends(get_settings)) -> dict:
+    demo.assert_demo_enabled(settings)
+    return {**demo.public_centre(), "roles": demo.public_roles()}
 
 
 @router.post("/enter")
@@ -65,6 +75,8 @@ async def enter(
         session,
         settings,
         role_key=payload.role,
+        business=payload.business,
+        branch_code=payload.branch_code,
         user_agent=request.headers.get("user-agent"),
         ip=_client_ip(request),
     )

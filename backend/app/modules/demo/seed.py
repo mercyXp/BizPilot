@@ -27,29 +27,15 @@ from app.modules.authorization.service import add_membership, assign_role
 from app.modules.catalogue.models import Product, ProductCategory, ProductPrice, ProductVariant
 from app.modules.catalogue.models import UnitOfMeasure
 from app.modules.crm.models import Customer
-from app.modules.demo.constants import (
-    BRANCHES,
-    CATEGORIES,
-    DEMO_LEGAL_NAME,
-    DEMO_MONTHLY_EXPENSES,
-    DEMO_MONTHLY_REVENUE,
-    DEMO_ORG_NAME,
-    DEMO_ROLES,
-    DEMO_SLUG,
-    SCALE_COMPACT,
-    SCALE_FULL,
-)
-from app.modules.inventory.models import StockBalance, StockMovement
+from app.modules.demo.catalog import DemoBusinessSpec, business_by_slug
+from app.modules.demo.constants import DEMO_ROLES, demo_email, scale_for
+from app.modules.inventory.models import ProductBatch, StockBalance, StockMovement
 from app.modules.payroll.models import Employee
 from app.modules.purchasing.models import PurchaseOrder, PurchaseOrderItem, Supplier
 from app.modules.sales.models import Payment, Sale, SaleItem
 from app.modules.tenancy.models import OrganizationSettings, Warehouse
 from app.modules.tenancy.service import create_branch, create_organization, list_warehouses
 from app.core.context import TenantContext
-
-
-def _scale(compact: bool) -> dict[str, int]:
-    return dict(SCALE_COMPACT if compact else SCALE_FULL)
 
 
 def _money(value: int | float | Decimal) -> Decimal:
@@ -70,40 +56,49 @@ def _owner_ctx(user_id: UUID, org_id: UUID, membership_id: UUID) -> TenantContex
     )
 
 
-async def find_demo_org(session: AsyncSession, *, owner_id: UUID | None = None) -> Organization | None:
-    if owner_id is not None:
-        await set_request_context(session, user_id=owner_id, organization_id=None)
+async def find_demo_org(
+    session: AsyncSession, *, slug: str, owner_id: UUID | None = None
+) -> Organization | None:
+    if owner_id is None:
         return await session.scalar(
             select(Organization)
-            .join(
-                OrganizationMembership,
-                OrganizationMembership.organization_id == Organization.id,
-            )
-            .where(
-                Organization.name == DEMO_ORG_NAME,
+            .join(OrganizationSettings, OrganizationSettings.organization_id == Organization.id)
+            .where(OrganizationSettings.settings.contains({"demo_key": slug}))
+        )
+    await set_request_context(session, user_id=owner_id, organization_id=None)
+    memberships = list(
+        await session.scalars(
+            select(OrganizationMembership).where(
                 OrganizationMembership.user_id == owner_id,
                 OrganizationMembership.status == "active",
             )
-            .order_by(Organization.created_at.desc())
         )
-    row = await session.scalar(
-        select(Organization)
-        .join(OrganizationSettings, OrganizationSettings.organization_id == Organization.id)
-        .where(OrganizationSettings.settings.contains({"demo_key": DEMO_SLUG}))
     )
-    return row
+    for membership in memberships:
+        await set_request_context(session, user_id=owner_id, organization_id=membership.organization_id)
+        settings_row = await session.scalar(
+            select(OrganizationSettings).where(
+                OrganizationSettings.organization_id == membership.organization_id
+            )
+        )
+        if isinstance(settings_row, OrganizationSettings) and isinstance(settings_row.settings, dict):
+            if settings_row.settings.get("demo_key") == slug:
+                return await session.get(Organization, membership.organization_id)
+    await set_request_context(session, user_id=owner_id, organization_id=None)
+    return None
 
 
-async def ensure_demo_users(session: AsyncSession) -> dict[str, User]:
+async def ensure_demo_users(session: AsyncSession, slug: str) -> dict[str, User]:
     password_hash = hash_password("demo-local-only-not-for-login")
     now = datetime.now(UTC)
     users: dict[str, User] = {}
     for spec in DEMO_ROLES:
-        user = await session.scalar(select(User).where(User.email == spec["email"]))
+        email = demo_email(slug, spec["key"])
+        user = await session.scalar(select(User).where(User.email == email))
         if user is None:
             user = User(
                 id=new_uuid(),
-                email=spec["email"],
+                email=email,
                 password_hash=password_hash,
                 full_name=spec["full_name"],
                 email_verified_at=now,
@@ -128,27 +123,35 @@ async def wipe_demo_org(session: AsyncSession, org: Organization, actor_id: UUID
 
 
 async def seed_mwamba(session: AsyncSession, *, compact: bool, reset: bool = False) -> Organization:
-    users = await ensure_demo_users(session)
+    return await seed_demo_business(session, slug="mwamba", compact=compact, reset=reset)
+
+
+async def seed_demo_business(
+    session: AsyncSession, *, slug: str, compact: bool, reset: bool = False
+) -> Organization:
+    spec = business_by_slug(slug)
+    users = await ensure_demo_users(session, slug)
     owner = users["owner"]
-    existing = await find_demo_org(session, owner_id=owner.id)
+    existing = await find_demo_org(session, slug=slug, owner_id=owner.id)
     if existing is not None and not reset:
         return existing
     if existing is not None and reset:
         await wipe_demo_org(session, existing, owner.id)
 
     await set_request_context(session, user_id=owner.id, organization_id=None)
+    first = spec["branches"][0]
     org, membership, first_branch, _warehouse = await create_organization(
         session,
         owner,
-        name=DEMO_ORG_NAME,
-        legal_name=DEMO_LEGAL_NAME,
+        name=spec["name"],
+        legal_name=spec["legal_name"],
         roles_payload=build_role_seed(),
-        industry_code="general",
+        industry_code=spec["pack"],
         timezone="Africa/Lusaka",
         base_currency_code="ZMW",
         country_code="ZM",
-        first_branch={"code": BRANCHES[0][0], "name": BRANCHES[0][1]},
-        first_warehouse={"code": f"{BRANCHES[0][0]}-WH", "name": f"{BRANCHES[0][1]} warehouse"},
+        first_branch={"code": first["code"], "name": first["name"]},
+        first_warehouse={"code": f"{first['code']}-WH", "name": f"{first['name']} warehouse"},
     )
     if first_branch is None:
         raise RuntimeError("Demo organisation is missing a home branch")
@@ -170,8 +173,9 @@ async def seed_mwamba(session: AsyncSession, *, compact: bool, reset: bool = Fal
     payload = dict(settings_row.settings) if settings_row and isinstance(settings_row.settings, dict) else {}
     payload.update(
         {
-            "demo_key": DEMO_SLUG,
+            "demo_key": spec["slug"],
             "is_demo": True,
+            "demo_industry": spec["industry"],
             "demo_access": {"roles_explored": [], "modules_visited": []},
         }
     )
@@ -181,26 +185,27 @@ async def seed_mwamba(session: AsyncSession, *, compact: bool, reset: bool = Fal
         settings_row.settings = payload
 
     branches = [first_branch]
-    for code, name, _city in BRANCHES[1:]:
+    for row in spec["branches"][1:]:
         branch = await create_branch(
-            session, ctx, code=code, name=name, phone=None, create_default_warehouse=True
+            session, ctx, code=row["code"], name=row["name"], phone=None, create_default_warehouse=True
         )
         branches.append(branch)
+    branch_ids = [row.id for row in branches]
 
-    for spec in DEMO_ROLES:
-        if spec["key"] == "owner":
+    for role in DEMO_ROLES:
+        if role["key"] == "owner":
             continue
         view = await add_membership(
             session,
             ctx,
-            email=spec["email"],
-            role_code=spec["role_codes"][0],
-            access_all_branches=True,
-            branch_ids=[],
+            email=demo_email(spec["slug"], role["key"]),
+            role_code=role["role_codes"][0],
+            access_all_branches=role["access_all_branches"],
+            branch_ids=[] if role["access_all_branches"] else branch_ids,
         )
-        for extra_role in spec["role_codes"][1:]:
+        for extra_role in role["role_codes"][1:]:
             await assign_role(session, ctx, view.id, extra_role)
-        for code in spec["extra_allows"]:
+        for code in role["extra_allows"]:
             permission = await session.scalar(select(Permission).where(Permission.code == code))
             if permission is None:
                 continue
@@ -213,7 +218,7 @@ async def seed_mwamba(session: AsyncSession, *, compact: bool, reset: bool = Fal
                 )
             )
 
-    await _seed_operational(session, org.id, owner.id, branches, compact=compact)
+    await _seed_operational(session, org.id, owner.id, branches, spec=spec, compact=compact)
     await session.flush()
     return org
 
@@ -224,9 +229,10 @@ async def _seed_operational(
     actor_id: UUID,
     branches: list,
     *,
+    spec: DemoBusinessSpec,
     compact: bool,
 ) -> None:
-    counts = _scale(compact)
+    counts = scale_for(spec["slug"], compact)
     uom = await session.scalar(select(UnitOfMeasure).where(UnitOfMeasure.organization_id == org_id))
     if uom is None:
         raise RuntimeError("Demo organisation is missing a unit of measure")
@@ -258,7 +264,7 @@ async def _seed_operational(
         raise RuntimeError("Demo organisation is missing an accounting period")
 
     categories: list[ProductCategory] = []
-    for name in CATEGORIES:
+    for name in spec["categories"]:
         row = ProductCategory(
             id=new_uuid(),
             organization_id=org_id,
@@ -273,52 +279,96 @@ async def _seed_operational(
     products: list[Product] = []
     variants: list[ProductVariant] = []
     prices: list[ProductPrice] = []
+    batches: list[ProductBatch] = []
     n_products = counts["products"]
+    style = spec["style"]
+    prefix = spec["slug"][:3].upper()
     for index in range(n_products):
         category = categories[index % len(categories)]
         product_id = new_uuid()
-        variant_id = new_uuid()
-        sku = f"MRG-{index + 1:04d}"
+        sku = f"{prefix}-{index + 1:04d}"
         name = f"{category.name} {index + 1}"
         unit_price = _money(12 + (index % 80) + (index % 7) * 0.5)
+        attributes: dict = {}
+        if style == "pharmacy":
+            attributes = {
+                "generic_name": category.name,
+                "strength": f"{(index % 8 + 1) * 50}mg",
+                "restricted": False,
+            }
+        elif style == "electronics":
+            attributes = {"warranty_months": 12}
+        elif style == "hardware":
+            attributes = {"unit": "bag" if "Cement" in category.name else "each"}
+        product_type = "service" if style == "restaurant" else "goods"
         products.append(
             Product(
                 id=product_id,
                 organization_id=org_id,
                 category_id=category.id,
-                type="goods",
+                type=product_type,
                 name=name,
                 sku=sku,
+                barcode=f"6{index + 1:012d}"[:13] if style == "grocery" else None,
                 uom_id=uom.id,
-                track_inventory=True,
+                track_inventory=product_type == "goods",
+                track_batches=style == "pharmacy",
+                track_expiry=style == "pharmacy",
+                track_serials=style == "electronics",
+                attributes=attributes,
                 is_active=True,
             )
         )
-        variants.append(
-            ProductVariant(
-                id=variant_id,
-                organization_id=org_id,
-                product_id=product_id,
-                sku=sku,
-                name=name,
-                is_active=True,
+        variant_defs: list[tuple[str, dict]] = [(name, {})]
+        if style == "clothing":
+            variant_defs = [
+                (f"{name} / M / Navy", {"size": "M", "colour": "navy"}),
+                (f"{name} / L / White", {"size": "L", "colour": "white"}),
+            ]
+            if compact:
+                variant_defs = variant_defs[:1]
+        for offset, (variant_name, variant_attrs) in enumerate(variant_defs):
+            variant_id = new_uuid()
+            variant_sku = sku if offset == 0 else f"{sku}-{offset + 1}"
+            variants.append(
+                ProductVariant(
+                    id=variant_id,
+                    organization_id=org_id,
+                    product_id=product_id,
+                    sku=variant_sku,
+                    name=variant_name,
+                    attributes=variant_attrs,
+                    is_active=True,
+                )
             )
-        )
-        prices.append(
-            ProductPrice(
-                id=new_uuid(),
-                organization_id=org_id,
-                variant_id=variant_id,
-                price_list_code="retail",
-                amount=unit_price,
-                currency_code="ZMW",
+            prices.append(
+                ProductPrice(
+                    id=new_uuid(),
+                    organization_id=org_id,
+                    variant_id=variant_id,
+                    price_list_code="wholesale" if spec["slug"] == "zed-wholesale" else "retail",
+                    amount=unit_price,
+                    currency_code="ZMW",
+                )
             )
-        )
+            if style == "pharmacy":
+                batches.append(
+                    ProductBatch(
+                        id=new_uuid(),
+                        organization_id=org_id,
+                        variant_id=variant_id,
+                        batch_number=f"B{index + 1:04d}",
+                        expires_on=date.today() + timedelta(days=180 + index),
+                        manufactured_on=date.today() - timedelta(days=40),
+                    )
+                )
     session.add_all(products)
     await session.flush()
     session.add_all(variants)
     await session.flush()
     session.add_all(prices)
+    if batches:
+        session.add_all(batches)
     await session.flush()
 
     customers: list[Customer] = []
@@ -398,8 +448,8 @@ async def _seed_operational(
     await session.flush()
 
     n_sales = counts["sales"]
-    base = DEMO_MONTHLY_REVENUE // n_sales
-    remainder = DEMO_MONTHLY_REVENUE - base * n_sales
+    base = spec["monthly_revenue"] // n_sales
+    remainder = spec["monthly_revenue"] - base * n_sales
     sales: list[Sale] = []
     items: list[SaleItem] = []
     payments: list[Payment] = []
@@ -533,8 +583,8 @@ async def _seed_operational(
         )
 
     n_expenses = counts["expenses"]
-    exp_base = DEMO_MONTHLY_EXPENSES // n_expenses
-    exp_remainder = DEMO_MONTHLY_EXPENSES - exp_base * n_expenses
+    exp_base = spec["monthly_expenses"] // n_expenses
+    exp_remainder = spec["monthly_expenses"] - exp_base * n_expenses
     expenses: list[Expense] = []
     expense_lines: list[ExpenseLine] = []
     vendors = ("ZESCO", "Lusaka Water", "Airtel Zambia", "Shop rent Chelstone", "Fuel Fill Up")
@@ -686,7 +736,7 @@ async def _seed_operational(
                 organization_id=org_id,
                 event_type="demo.notification",
                 payload_json={
-                    "title": "Low stock on maize meal" if index % 2 == 0 else "Shift closed at Lusaka Central",
+                    "title": f"Low stock at {spec['name']}" if index % 2 == 0 else f"Shift closed at {branches[0].name}",
                     "body": "Sample operational alert for the live demo.",
                 },
                 status="delivered",

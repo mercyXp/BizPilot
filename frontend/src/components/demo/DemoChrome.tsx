@@ -10,16 +10,16 @@ import { isDemoTourDone, setDemoTourDone } from "@/lib/session";
 
 const tourSteps = [
   {
-    title: "Owner view",
-    body: "Start on Home for Mwamba’s revenue, expenses and branch mix.",
+    title: "This business is live data",
+    body: "Home, POS, inventory and reports all use the same seeded tenant for the industry you chose.",
   },
   {
-    title: "Switch roles",
-    body: "Use Switch role to become a salesperson, complete a sale, then return as manager.",
+    title: "Switch roles and branches",
+    body: "Owners can consolidate every branch. Managers stay on the branches they are granted.",
   },
   {
     title: "Reset anytime",
-    body: "Reset demo data restores the original Mwamba seed, including stock and journals.",
+    body: "Reset demo data restores this business’s original seed, including stock and journals.",
   },
 ];
 
@@ -53,7 +53,8 @@ export function DemoChrome() {
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide">Demo environment · Safe to explore</p>
             <p className="text-xs">
-              You are exploring sample business data. Changes made here will not affect real business records.
+              {demoSnapshot?.organization.name ?? "Demo"} · sample data only. Changes here will not
+              affect real business records.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -87,6 +88,9 @@ export function DemoChrome() {
                 </option>
               ))}
             </select>
+            <Button size="sm" variant="ghost" href="/demo">
+              Change business
+            </Button>
             <Button
               size="sm"
               variant="outline"

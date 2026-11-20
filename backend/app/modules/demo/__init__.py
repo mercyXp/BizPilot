@@ -1,4 +1,4 @@
-"""Isolated live-demo tenant: one shared Mwamba Retail Group, six role accounts."""
+"""Industry demo centre: isolated tenants, shared BizPilot services."""
 
 from app.modules.demo.constants import DEMO_ROLES, DEMO_SLUG
 

@@ -90,6 +90,8 @@ export type DemoSnapshot = {
   role: string | null;
   role_title: string | null;
   is_demo: boolean;
+  access_all_branches?: boolean;
+  preferred_branch_id?: string | null;
   access: { roles_explored?: string[]; modules_visited?: string[] };
 };
 

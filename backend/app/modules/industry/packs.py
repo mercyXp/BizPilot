@@ -79,6 +79,45 @@ PACKS: tuple[dict, ...] = (
             "fiscal_year_start_month": 1,
         },
     },
+    {
+        "code": "hardware",
+        "name": "Hardware",
+        "config_schema": {"type": "object"},
+        "default_modules": {"catalogue": True, "inventory": True, "sales": True, "purchasing": True},
+        "default_settings": {
+            "modules": {"catalogue": True, "inventory": True, "sales": True, "purchasing": True},
+            "inventory": {"allow_negative_stock": False},
+            "catalogue": {"track_batches": False, "track_expiry": False},
+            "fiscal_year_start_month": 1,
+        },
+    },
+    {
+        "code": "restaurant",
+        "name": "Restaurant",
+        "config_schema": {"type": "object"},
+        "default_modules": {"catalogue": True, "inventory": True, "sales": True},
+        "default_settings": {
+            "modules": {"catalogue": True, "inventory": True, "sales": True},
+            "inventory": {"allow_negative_stock": False},
+            "catalogue": {"track_batches": True, "track_expiry": True},
+            "fiscal_year_start_month": 1,
+        },
+    },
+    {
+        "code": "electronics",
+        "name": "Electronics",
+        "config_schema": {
+            "type": "object",
+            "properties": {"warranty_months": {"type": "integer"}},
+        },
+        "default_modules": {"catalogue": True, "inventory": True, "sales": True},
+        "default_settings": {
+            "modules": {"catalogue": True, "inventory": True, "sales": True},
+            "inventory": {"allow_negative_stock": False},
+            "catalogue": {"track_batches": False, "track_expiry": False, "track_serials": True},
+            "fiscal_year_start_month": 1,
+        },
+    },
 )
 
 

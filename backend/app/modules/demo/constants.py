@@ -1,128 +1,94 @@
 from typing import TypedDict
 
+from app.modules.demo.catalog import BUSINESSES, business_by_slug
+
+DEMO_EMAIL_DOMAIN = "demo.bizpilot.local"
+DEMO_SLUG = "mwamba"
+DEMO_ORG_NAME = BUSINESSES[DEMO_SLUG]["name"]
+DEMO_LEGAL_NAME = BUSINESSES[DEMO_SLUG]["legal_name"]
+DEMO_INDUSTRY = "grocery"
+DEMO_MONTHLY_REVENUE = BUSINESSES[DEMO_SLUG]["monthly_revenue"]
+DEMO_MONTHLY_EXPENSES = BUSINESSES[DEMO_SLUG]["monthly_expenses"]
+
+BRANCHES = tuple((row["code"], row["name"], row["city"]) for row in BUSINESSES[DEMO_SLUG]["branches"])
+CATEGORIES = BUSINESSES[DEMO_SLUG]["categories"]
+
 
 class DemoRoleSpec(TypedDict):
     key: str
-    email: str
     full_name: str
     role_codes: list[str]
     title: str
     summary: str
     extra_allows: list[str]
+    access_all_branches: bool
 
-
-DEMO_SLUG = "mwamba"
-DEMO_ORG_NAME = "Mwamba Retail Group"
-DEMO_LEGAL_NAME = "Mwamba Retail Group Limited"
-DEMO_EMAIL_DOMAIN = "demo.bizpilot.local"
-DEMO_INDUSTRY = "general"
-DEMO_MONTHLY_REVENUE = 248_650
-DEMO_MONTHLY_EXPENSES = 76_420
-
-BRANCHES: tuple[tuple[str, str, str], ...] = (
-    ("LSK", "Lusaka Central", "Lusaka"),
-    ("CHE", "Chelstone", "Lusaka"),
-    ("KTW", "Kitwe", "Kitwe"),
-)
-
-CATEGORIES: tuple[str, ...] = (
-    "Maize meal",
-    "Cooking oil",
-    "Sugar",
-    "Rice",
-    "Beans",
-    "Kapenta",
-    "Fresh produce",
-    "Butchery",
-    "Dairy",
-    "Bakery",
-    "Beverages",
-    "Soft drinks",
-    "Water",
-    "Snacks",
-    "Household",
-    "Cleaning",
-    "Personal care",
-    "Baby",
-    "Pharmacy OTC",
-    "Stationery",
-    "Airtime",
-    "Charcoal",
-    "Hardware mini",
-    "Frozen",
-    "Salt and spices",
-)
 
 DEMO_ROLES: tuple[DemoRoleSpec, ...] = (
     {
         "key": "owner",
-        "email": f"owner@{DEMO_EMAIL_DOMAIN}",
         "full_name": "Chanda Mwamba",
         "role_codes": ["owner"],
         "title": "Business Owner",
         "summary": "Financial overview, branches, performance and business control.",
         "extra_allows": [],
+        "access_all_branches": True,
     },
     {
         "key": "admin",
-        "email": f"admin@{DEMO_EMAIL_DOMAIN}",
         "full_name": "Mutale Banda",
         "role_codes": ["org_admin"],
         "title": "Administrator",
         "summary": "Users, permissions, settings and operational oversight.",
         "extra_allows": [],
+        "access_all_branches": True,
     },
     {
         "key": "manager",
-        "email": f"manager@{DEMO_EMAIL_DOMAIN}",
         "full_name": "Thandiwe Phiri",
         "role_codes": ["manager"],
         "title": "Manager",
         "summary": "Daily operations, stock, staff and sales supervision.",
         "extra_allows": ["expenses.create", "expenses.approve", "users.manage"],
+        "access_all_branches": False,
+    },
+    {
+        "key": "accountant",
+        "full_name": "Lillian Ngoma",
+        "role_codes": ["accountant"],
+        "title": "Accountant",
+        "summary": "Journals, expenses, payroll view and financial reports.",
+        "extra_allows": [],
+        "access_all_branches": True,
     },
     {
         "key": "salesperson",
-        "email": f"sales@{DEMO_EMAIL_DOMAIN}",
         "full_name": "Kabwe Zulu",
         "role_codes": ["sales", "cashier"],
-        "title": "Salesperson",
+        "title": "Salesperson / Cashier",
         "summary": "POS, transactions, receipts and customer sales.",
         "extra_allows": [],
+        "access_all_branches": False,
     },
     {
         "key": "stock",
-        "email": f"stock@{DEMO_EMAIL_DOMAIN}",
         "full_name": "Nchimunya Tembo",
         "role_codes": ["inventory_manager"],
         "title": "Stock Controller",
         "summary": "Inventory, stock movements and replenishment.",
         "extra_allows": ["purchases.receive", "purchases.view"],
+        "access_all_branches": False,
     },
     {
         "key": "auditor",
-        "email": f"auditor@{DEMO_EMAIL_DOMAIN}",
         "full_name": "Lweendo Siame",
         "role_codes": ["viewer"],
-        "title": "Auditor / Viewer",
+        "title": "Auditor / Read-only Viewer",
         "summary": "Reports, financial records and audit trails without editing.",
         "extra_allows": [],
+        "access_all_branches": True,
     },
 )
-
-SCALE_FULL = {
-    "products": 1250,
-    "customers": 180,
-    "suppliers": 35,
-    "sales": 500,
-    "purchase_orders": 100,
-    "expenses": 150,
-    "stock_movements": 350,
-    "employees": 15,
-    "journals": 1000,
-    "notifications": 30,
-    "audit_logs": 200,
-}
 
 SCALE_COMPACT = {
     "products": 12,
@@ -139,8 +105,32 @@ SCALE_COMPACT = {
 }
 
 
+def demo_email(slug: str, role_key: str) -> str:
+    return f"{slug}.{role_key}@{DEMO_EMAIL_DOMAIN}"
+
+
 def role_by_key(key: str) -> DemoRoleSpec:
     for spec in DEMO_ROLES:
         if spec["key"] == key:
             return spec
     raise KeyError(key)
+
+
+def scale_for(slug: str, compact: bool) -> dict[str, int]:
+    if compact:
+        return dict(SCALE_COMPACT)
+    spec = business_by_slug(slug)
+    products = 48 if spec["products"] >= 80 else max(12, spec["products"])
+    return {
+        "products": products,
+        "customers": max(8, spec["employees"]),
+        "suppliers": 6,
+        "sales": 24,
+        "purchase_orders": 8,
+        "expenses": 10,
+        "stock_movements": 16,
+        "employees": spec["employees"],
+        "journals": 40,
+        "notifications": 8,
+        "audit_logs": 24,
+    }
