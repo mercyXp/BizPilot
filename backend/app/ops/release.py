@@ -22,6 +22,14 @@ logger = logging.getLogger(__name__)
 APP_ROLE = "bizpilot_app"
 
 
+def alter_role_password_sql(role: str, password: str) -> sql.Composed:
+    # ALTER ROLE does not accept bind parameters ($1); the password must be a SQL literal.
+    return sql.SQL("ALTER ROLE {} WITH LOGIN PASSWORD {}").format(
+        sql.Identifier(role),
+        sql.Literal(password),
+    )
+
+
 def _alembic_upgrade(sync_url: str) -> None:
     config = Config("alembic.ini")
     config.set_main_option("sqlalchemy.url", sync_url.replace("%", "%%"))
@@ -43,7 +51,7 @@ def _ensure_app_role(sync_url: str, password: str) -> None:
             $$;
             """
         )
-        conn.execute("ALTER ROLE bizpilot_app WITH LOGIN PASSWORD %s", (password,))
+        conn.execute(alter_role_password_sql(APP_ROLE, password))
         row = conn.execute("SELECT current_database()").fetchone()
         if row is None:
             raise RuntimeError("Could not read current_database()")

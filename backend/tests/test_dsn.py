@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.core.config import Settings
+from app.ops.release import alter_role_password_sql
 from app.core.dsn import app_async_url, ensure_ssl, owner_sync_url, replace_user, with_sqlalchemy_driver
 
 
@@ -72,3 +73,10 @@ def test_production_settings_require_app_password() -> None:
 def test_ensure_ssl_skips_loopback() -> None:
     url = "postgresql+asyncpg://bizpilot_app@127.0.0.1:55432/bizpilot"
     assert ensure_ssl(url, async_driver=True) == url
+
+
+def test_alter_role_password_sql_quotes_literal_not_placeholder() -> None:
+    rendered = alter_role_password_sql("bizpilot_app", "p'ass$1").as_string(None)
+    assert "$1" not in rendered.replace("'p''ass$1'", "")
+    assert "PASSWORD 'p''ass$1'" in rendered
+    assert '"bizpilot_app"' in rendered
