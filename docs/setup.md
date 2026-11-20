@@ -1,6 +1,6 @@
 # BizPilot development setup
 
-Phase 1 runs a Next.js app, a FastAPI API, PostgreSQL, and an optional Redis server.
+Phase 1 runs a Next.js app, a FastAPI API, PostgreSQL, and an optional Redis server. Phase 3 adds authentication, organizations, branches, and role checks on that same API.
 
 ## Prerequisites
 
@@ -20,21 +20,31 @@ Do not commit `.env`. `SECRET_KEY` in the example is for local development only.
 
 `REDIS_URL=memory://` is allowed in development when Redis is not installed. Production must use a real Redis URL.
 
-If you use `docker compose up -d`, set:
+If you use `docker compose up -d`, keep the database URLs from `.env.example` and point Redis at the Compose service:
 
 ```
-DATABASE_URL=postgresql+asyncpg://bizpilot:bizpilot@127.0.0.1:55432/bizpilot
+DATABASE_URL=postgresql+asyncpg://bizpilot_app:bizpilot@127.0.0.1:55432/bizpilot
 DATABASE_URL_SYNC=postgresql+psycopg://bizpilot:bizpilot@127.0.0.1:55432/bizpilot
 REDIS_URL=redis://127.0.0.1:6379/0
 ```
 
 ## PostgreSQL (local, no Docker)
 
+Windows:
+
 ```powershell
 .\scripts\start-local-postgres.ps1
 ```
 
-Creates `.data/postgres` (gitignored), user `bizpilot`, database `bizpilot`, port `55432`, trust auth on localhost.
+Linux:
+
+```bash
+./scripts/start-local-postgres.sh
+```
+
+Creates `.data/postgres` (gitignored), superuser `bizpilot`, database `bizpilot`, port `55432`, trust auth on localhost. The Phase 3 migration creates the non-superuser role `bizpilot_app`.
+
+The API must use `bizpilot_app`. Alembic must use the owner role (`bizpilot` locally) so it can create tables and policies. A superuser connection bypasses row-level security.
 
 ## Backend
 
@@ -52,7 +62,33 @@ Checks:
 
 - `GET http://localhost:8000/health`
 - `GET http://localhost:8000/api/v1/health`
-- `GET http://localhost:8000/api/v1/health/ready`
+- `GET http://localhost:8000/api/v1/health/ready` (`schema_phase` is `3` after the Phase 3 migration)
+
+## Phase 3 API
+
+Access tokens are bearer tokens. They do not contain an organization id. Send `X-Organization-Id` on tenant routes and `X-Branch-Id` when a route is branch-scoped.
+
+```http
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/me
+POST /api/v1/organizations
+GET  /api/v1/organizations
+POST /api/v1/branches
+GET  /api/v1/branches
+GET  /api/v1/branches/{branch_id}
+GET  /api/v1/memberships
+POST /api/v1/memberships
+PATCH /api/v1/memberships/{membership_id}
+PUT  /api/v1/memberships/{membership_id}/branches
+PUT  /api/v1/memberships/{membership_id}/overrides
+POST /api/v1/authorization/gates/journal-post
+POST /api/v1/authorization/gates/inventory-adjust
+```
+
+The two gate routes only check permissions. They do not post journals or change stock. Creating an organization copies the system roles onto that organization and makes the caller the owner. Owners have `access_all_branches`. A cashier or viewer only sees branches listed on `membership_branches` unless `access_all_branches` is set.
+
+Denied requests return `403` with `error.code` of `permission_denied` and no stack trace.
 
 ## Frontend
 

@@ -1,7 +1,7 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phase 0 in review — awaiting approval before Phase 1  
+**Status:** Phase 3 RBAC implemented — Phase 2 identity flows still incomplete  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
@@ -32,13 +32,26 @@ This file is the index of approved product and technical decisions. Phase docume
 
 | Phase | Name | Status |
 | --- | --- | --- |
-| 0 | Product specification and architecture | In progress — pending approval |
-| 1–15 | See roadmap document | Not started |
+| 0 | Product specification and architecture | Recorded in `docs/phase-0/` |
+| 1 | Foundation | Scaffold was in place; health, config, logging, and Alembic still run |
+| 2 | Auth and tenancy | Partial. Register, login, access JWT, organizations, memberships, branches, and RLS exist because Phase 3 cannot be tested without them. Refresh rotation, logout, email verification, password reset, and invitations are not built |
+| 3 | RBAC | Implemented. See `docs/phase-3-report.md` |
+| 4–15 | See roadmap document | Not started |
 
 ## Decision log
 
-Decisions taken during Phase 0 (subject to your approval) are listed in `docs/phase-0/06-roadmap-decisions-gaps.md`. After approval they are copied here as binding.
+Decisions taken during Phase 0 are listed in `docs/phase-0/06-roadmap-decisions-gaps.md`.
+
+| ID | Decision | Why |
+| --- | --- | --- |
+| P3-1 | Phase 3 started on the Phase 1 scaffold, with only the Phase 2 tables and routes RBAC needs | The requested work was Phase 3. Forbidden-action and branch-leak tests need users, memberships, organizations, branches, and RLS. Refresh rotation, email verification, and invitations stay in the Phase 2 backlog |
+| P3-2 | API connects as `bizpilot_app` (`NOBYPASSRLS`). Alembic connects as the database owner | Superusers bypass row-level security even when it is forced. Isolation tests use the app role |
+| P3-3 | `organization_memberships` policy allows a row when `user_id` is the current user, or when the current user is an active member of the row's organization | The spec's org-only policy cannot list "my organizations" before an org is selected. Other tenant tables stay org-scoped and require an active membership |
+| P3-4 | Organization bootstrap is a `SECURITY DEFINER` function | The first membership and system roles must be inserted before the caller is a member. The app role has no insert grant on `organizations` or `roles` |
+| P3-5 | `users.session_version` backs the access-token `pv` claim | The security spec requires `pv`. Password change is not implemented, so the value stays `1` until that flow exists |
+| P3-6 | System roles are copied per organization. `platform.orgs.manage` is never copied. Cashiers do not get `accounting.journal.post`. Viewers do not get `inventory.adjust` | Phase 0 role matrix. Cashier `sales.refund` is present as the limited refund grant; amount limits wait for the sales module |
+| P3-7 | Journal-post and inventory-adjust routes are authorization gates only | Phase 3 has to prove 403s. It does not create journals or stock movements |
 
 ## Environment and secrets
 
-No application environment files exist yet. Secrets must never be committed. Phase 1 will introduce `.env.example` only.
+`.env.example` is the committed template. `.env` is gitignored. The local database password in Compose and the example file is a development credential, not a production secret. Production must replace `SECRET_KEY`, the database passwords, and `REDIS_URL`.

@@ -1,3 +1,7 @@
+import os
+
+os.environ["APP_ENV"] = "test"
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 

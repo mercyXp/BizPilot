@@ -9,3 +9,5 @@
 ## Environment
 
 Secrets live in `.env` (gitignored). `.env.example` is the committed template.
+
+The Phase 3 migration advances `app_metadata.schema_phase` to `3`. Readiness now reports that value. The API connects as `bizpilot_app`; Alembic still uses the owner role. See `docs/phase-3-report.md`.
