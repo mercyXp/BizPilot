@@ -11,6 +11,8 @@ Do not mark a Zambia tax, mobile-money, or ZRA item live unless credentials and 
 - [ ] `REDIS_URL` is a real Redis instance (`memory://` is development only)
 - [ ] `CORS_ORIGINS` lists only the production frontend origin
 - [ ] `PUBLIC_APP_URL` matches the public site
+- [ ] `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are set (domain verified in Resend)
+- [ ] Ready check reports `email` as `resend` (not `missing` / `log_only`)
 - [ ] TLS terminates in front of FastAPI and Next.js
 - [ ] OpenAPI docs are off in production (`/docs` is disabled when `APP_ENV=production`)
 - [ ] Demo mode is off (`DEMO_ENABLED=false`) unless a dedicated demo environment

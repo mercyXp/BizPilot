@@ -96,6 +96,7 @@ async def register_user(
         to_email=user.email,
         template="email_verify",
         payload={"verify_url": verify_url, "token": raw_token},
+        settings=settings,
     )
     await _audit(session, actor_user_id=user.id, action="user.register", entity_type="user", entity_id=str(user.id))
     return user, raw_token
@@ -255,6 +256,7 @@ async def request_password_reset(session: AsyncSession, settings: Settings, emai
         to_email=user.email,
         template="password_reset",
         payload={"reset_url": reset_url, "token": raw_token},
+        settings=settings,
     )
 
 

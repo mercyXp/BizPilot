@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     auth_rate_limit_window_seconds: int = 900
     demo_enabled: bool = True
     demo_compact: bool = False
+    resend_api_key: str = ""
+    resend_from_email: str = "BizPilot <noreply@localhost>"
 
     @field_validator("secret_key")
     @classmethod
@@ -49,6 +51,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @property
+    def requires_email_provider(self) -> bool:
+        return self.app_env in {"staging", "production"}
 
     @property
     def uses_memory_redis(self) -> bool:

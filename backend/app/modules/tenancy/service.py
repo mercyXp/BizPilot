@@ -364,6 +364,25 @@ async def create_invitation(
     )
     session.add(invitation)
     await session.flush()
+    from app.core.config import get_settings
+    from app.core.email import send_email
+
+    settings = get_settings()
+    organization = await session.get(Organization, ctx.organization_id)
+    org_name = organization.name if organization is not None else "BizPilot"
+    accept_url = f"{settings.public_app_url.rstrip('/')}/accept-invite?token={raw}"
+    await send_email(
+        session,
+        to_email=email_norm,
+        template="organization_invite",
+        payload={
+            "accept_url": accept_url,
+            "token": raw,
+            "organization_name": org_name,
+        },
+        organization_id=ctx.organization_id,
+        settings=settings,
+    )
     logger.info("email_event invitation queued", extra={"email": email_norm})
     return invitation, raw
 
@@ -534,6 +553,7 @@ async def create_owner_invitation(
             "organization_name": organization.name,
         },
         organization_id=organization.id,
+        settings=settings,
     )
     session.add(
         AuditLog(

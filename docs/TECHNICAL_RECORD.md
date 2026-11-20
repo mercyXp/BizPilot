@@ -85,6 +85,8 @@ See `.env.example`. Never commit `.env`.
 | `CORS_ORIGINS` | comma-separated browser origins |
 | `NEXT_PUBLIC_API_URL` | FastAPI origin for the Next.js app |
 | `PUBLIC_APP_URL` | Origin used in verification and invite links |
+| `RESEND_API_KEY` | Resend API key; empty in development/test (no live send) |
+| `RESEND_FROM_EMAIL` | Verified Resend from address, e.g. `BizPilot <noreply@domain>` |
 
 ## Decision log (binding)
 

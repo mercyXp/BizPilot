@@ -20,6 +20,8 @@ Do not commit `.env`. `SECRET_KEY` in the example is for local development only.
 
 `REDIS_URL=memory://` is allowed in development when Redis is not installed. Production must use a real Redis URL.
 
+Transactional mail uses [Resend](https://resend.com). Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` (a verified domain). With `APP_ENV=development` and an empty key, the API records `outbound_emails` and does not call Resend. `APP_ENV=test` never calls Resend. Staging and production refuse to send (and `/health/ready` fails) until the key is set.
+
 The API runtime role is `bizpilot_app` (no RLS bypass). Alembic uses the cluster owner `bizpilot`.
 
 If you use `docker compose up -d`, still run Alembic as the superuser, then point `DATABASE_URL` at `bizpilot_app`.

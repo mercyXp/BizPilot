@@ -34,8 +34,7 @@ function VerifyInner() {
       <p className="text-sm text-ink">{status}</p>
       {!token ? (
         <p className="mt-3 text-sm text-secondary">
-          Open the verification link from your email. In development the API logs the URL
-          and stores it in outbound_emails.
+          Open the verification link we sent to your inbox. If it is missing, check spam.
         </p>
       ) : null}
       {ok ? (

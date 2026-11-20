@@ -50,6 +50,12 @@ async def health_ready(settings: Settings = Depends(get_settings)) -> dict:
         checks["redis"] = "unavailable"
         failures.append("redis")
 
+    from app.core.email import email_delivery_mode
+
+    checks["email"] = email_delivery_mode(settings)
+    if checks["email"] == "missing":
+        failures.append("email")
+
     payload = {
         "status": "ok" if not failures else "unavailable",
         "service": settings.app_name,

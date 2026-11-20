@@ -11,3 +11,4 @@ async def test_ready_requires_database_and_schema(client: AsyncClient) -> None:
     assert body["checks"]["database"] == "ok"
     assert body["checks"]["schema_phase"] == "11"
     assert body["checks"]["redis"] in {"ok", "memory"}
+    assert body["checks"]["email"] == "log_only"
