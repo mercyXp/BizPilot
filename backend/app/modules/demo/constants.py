@@ -120,7 +120,10 @@ def scale_for(slug: str, compact: bool) -> dict[str, int]:
     if compact:
         return dict(SCALE_COMPACT)
     spec = business_by_slug(slug)
-    products = 48 if spec["products"] >= 80 else max(12, spec["products"])
+    if spec["slug"] == "mwamba":
+        products = spec["products"]
+    else:
+        products = 48 if spec["products"] >= 80 else max(12, spec["products"])
     return {
         "products": products,
         "customers": max(8, spec["employees"]),
