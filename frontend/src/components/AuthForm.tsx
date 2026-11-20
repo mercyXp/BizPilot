@@ -3,6 +3,11 @@
 import Link from "next/link";
 import type { FormEvent, ReactNode } from "react";
 
+import { Logo } from "@/components/ui/logo";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+import { Field as UiField, inputClassName } from "@/components/ui/input";
+
 export function AuthShell({
   title,
   subtitle,
@@ -14,10 +19,12 @@ export function AuthShell({
 }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <p className="text-sm font-medium uppercase tracking-wide text-slate-500">BizPilot</p>
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900">{title}</h1>
-      <p className="mt-2 text-sm text-slate-600">{subtitle}</p>
-      <div className="mt-8 rounded-lg border border-slate-200 bg-white p-6">{children}</div>
+      <Link href="/" className="w-fit" aria-label="BizPilot home">
+        <Logo height={40} priority />
+      </Link>
+      <h1 className="mt-6 text-2xl font-semibold tracking-tight text-ink">{title}</h1>
+      <p className="mt-2 text-sm text-secondary">{subtitle}</p>
+      <div className="mt-8 rounded-xl border border-border bg-surface p-6 shadow-card">{children}</div>
     </main>
   );
 }
@@ -29,16 +36,10 @@ export function Field({
   label: string;
   children: ReactNode;
 }) {
-  return (
-    <label className="block space-y-1 text-sm">
-      <span className="font-medium text-slate-700">{label}</span>
-      {children}
-    </label>
-  );
+  return <UiField label={label}>{children}</UiField>;
 }
 
-export const inputClassName =
-  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-900";
+export { inputClassName };
 
 export function PrimaryButton({
   children,
@@ -48,29 +49,27 @@ export function PrimaryButton({
   disabled?: boolean;
 }) {
   return (
-    <button
-      type="submit"
-      disabled={disabled}
-      className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
-    >
+    <Button type="submit" disabled={disabled} className="w-full">
       {children}
-    </button>
+    </Button>
   );
 }
 
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
-  return <p className="text-sm text-red-700">{message}</p>;
+  return (
+    <Alert tone="critical">{message}</Alert>
+  );
 }
 
 export function AuthLinks() {
   return (
-    <p className="mt-4 text-center text-sm text-slate-600">
-      <Link className="underline" href="/sign-in">
+    <p className="mt-4 text-center text-sm text-secondary">
+      <Link className="text-brand-deep underline-offset-2 hover:underline" href="/sign-in">
         Sign in
       </Link>
       {" · "}
-      <Link className="underline" href="/sign-up">
+      <Link className="text-brand-deep underline-offset-2 hover:underline" href="/sign-up">
         Create account
       </Link>
     </p>

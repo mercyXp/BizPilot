@@ -31,9 +31,9 @@ function VerifyInner() {
 
   return (
     <AuthShell title="Verify email" subtitle="We send a link after you create an account.">
-      <p className="text-sm text-slate-700">{status}</p>
+      <p className="text-sm text-ink">{status}</p>
       {!token ? (
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-secondary">
           Open the verification link from your email. In development the API logs the URL
           and stores it in outbound_emails.
         </p>

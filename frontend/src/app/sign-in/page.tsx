@@ -54,12 +54,12 @@ export default function SignInPage() {
         <FormError message={error} />
         <PrimaryButton disabled={pending}>{pending ? "Signing in…" : "Sign in"}</PrimaryButton>
       </form>
-      <p className="mt-4 text-center text-sm text-slate-600">
-        <Link className="underline" href="/forgot-password">
+      <p className="mt-4 text-center text-sm text-secondary">
+        <Link className="text-brand-deep underline-offset-2 hover:underline" href="/forgot-password">
           Forgot password
         </Link>
         {" · "}
-        <Link className="underline" href="/sign-up">
+        <Link className="text-brand-deep underline-offset-2 hover:underline" href="/sign-up">
           Create account
         </Link>
       </p>

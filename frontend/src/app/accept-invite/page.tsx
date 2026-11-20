@@ -53,7 +53,7 @@ function AcceptInner() {
           {pending ? "Joining…" : "Accept invitation"}
         </PrimaryButton>
       </form>
-      <p className="mt-4 text-sm text-slate-600">
+      <p className="mt-4 text-sm text-secondary">
         Wrong account?{" "}
         <Link className="underline" href="/sign-in">
           Sign in

@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell title="Reset password" subtitle="If the account exists, we send a reset link.">
       {done ? (
-        <p className="text-sm text-slate-700">Check your email for the reset link.</p>
+        <p className="text-sm text-ink">Check your email for the reset link.</p>
       ) : (
         <form className="space-y-4" onSubmit={onSubmit}>
           <Field label="Email">

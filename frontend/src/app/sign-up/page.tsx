@@ -63,9 +63,9 @@ export default function SignUpPage() {
         <FormError message={error} />
         <PrimaryButton disabled={pending}>{pending ? "Creating…" : "Create account"}</PrimaryButton>
       </form>
-      <p className="mt-4 text-center text-sm text-slate-600">
+      <p className="mt-4 text-center text-sm text-secondary">
         Already have an account?{" "}
-        <Link className="underline" href="/sign-in">
+        <Link className="text-brand-deep underline-offset-2 hover:underline" href="/sign-in">
           Sign in
         </Link>
       </p>
