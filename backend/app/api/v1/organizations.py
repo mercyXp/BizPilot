@@ -215,6 +215,7 @@ async def industries(session: AsyncSession = Depends(get_db)) -> list[IndustryOu
             id=row.id,
             code=row.code,
             name=row.name,
+            config_schema=row.config_schema,
             default_modules=row.default_modules,
             default_settings=row.default_settings,
         )

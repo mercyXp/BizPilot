@@ -1,7 +1,7 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phase 3–9 ported onto the main scaffold (RBAC through payroll) plus public pricing UI  
+**Status:** Phases 1–9 plus live demo, operational reporting, i18n/industry packs, and production checklist/CI  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
@@ -44,7 +44,12 @@ This file is the index of approved product and technical decisions. Do not contr
 | 7 | CRM and purchasing | Completed |
 | 8 | Accounting | Completed |
 | 9 | Payroll | Completed |
-| 10–15 | See roadmap | Not started |
+| 10 | Grok | Not started |
+| 11 | Reporting | Completed (operational reports + dashboard) |
+| 12 | i18n and industry packs | Completed (message catalogue + pharmacy/clothing config) |
+| 13 | SaaS billing | Not started |
+| 14 | Integrations | Not started |
+| 15 | QA and production readiness | Completed (CI + production checklist; no fake ZRA/MoMo claims) |
 
 ## Implemented modules
 
@@ -52,7 +57,9 @@ This file is the index of approved product and technical decisions. Do not contr
 - `backend/app/api/v1/health` — live and ready checks
 - `backend/app/api/v1/auth` — register, login, refresh, logout, verify, password reset
 - `backend/app/api/v1/organizations` — create org, memberships, invitations
-- `frontend` — sign-in/up, verify, reset, org switcher at `/app`
+- `frontend` — sign-in/up, verify, reset, org switcher at `/app`, live `/app/reports`, dashboard KPIs from reporting API
+- `backend/app/api/v1/reporting` — sales, inventory, movement, purchases, expenses, customers, shifts, tax, summary, CSV export (`reports.view`)
+- `backend/app/api/v1/i18n` — message catalogue with `system` / `professional` provenance
 
 ## Completed migrations
 
@@ -62,6 +69,7 @@ This file is the index of approved product and technical decisions. Do not contr
 - `20261120_0004` — RBAC, industries, branches (does not recreate users/orgs)
 - `20261120_0005` — org settings, warehouses, catalogue, inventory
 - `20261120_0006` — CRM, sales, purchasing, accounting, payroll
+- `20261120_0007` — `translation_resources`, industry pack refresh, `schema_phase=11`
 
 ## Environment variables
 
@@ -81,6 +89,8 @@ See `.env.example`. Never commit `.env`.
 ## Decision log (binding)
 
 Phase 0 D1–D25 are approved by the instruction to proceed to Phase 1. See `docs/phase-0/06-roadmap-decisions-gaps.md`.
+
+See [production-checklist.md](production-checklist.md) for Phase 15 go-live gates.
 
 Phase 1 additions:
 

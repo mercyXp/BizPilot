@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { MonitorSmartphone, Receipt, Scale, User, Info } from "lucide-react";
+import { Globe, MonitorSmartphone, Receipt, Scale, User, Info } from "lucide-react";
 
 import { useAuth } from "@/components/AuthProvider";
+import { useI18n } from "@/components/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Field, Input } from "@/components/ui/input";
+import { Field, Input, Select } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
@@ -18,6 +19,7 @@ const sections = [
   { id: "receipts", label: "Receipts", icon: Receipt },
   { id: "rules", label: "Selling rules", icon: Scale },
   { id: "account", label: "My account", icon: User },
+  { id: "language", label: "Language", icon: Globe },
   { id: "org", label: "Organisation", icon: Info },
 ] as const;
 
@@ -33,7 +35,9 @@ export default function SettingsPage() {
     selectOrg,
     accessToken,
     reloadMemberships,
+    tenantFetch,
   } = useAuth();
+  const { t, locale, setLocale, professionalKeys } = useI18n();
   const [section, setSection] = useState<SectionId>("hardware");
   const [barcode, setBarcode] = useState(false);
   const [scan, setScan] = useState("");
@@ -180,6 +184,39 @@ export default function SettingsPage() {
                 <dd>{user?.email_verified ? <Badge tone="success">Verified</Badge> : <Badge tone="warning">Pending</Badge>}</dd>
               </div>
             </dl>
+          </Card>
+        ) : null}
+
+        {section === "language" ? (
+          <Card className="p-5">
+            <h2 className="text-base font-semibold text-ink">{t("settings.language")}</h2>
+            <p className="mt-2 text-sm text-secondary">{t("settings.language_hint")}</p>
+            <label className="mt-4 block max-w-xs text-xs font-medium text-secondary">
+              Locale
+              <Select
+                className="mt-1"
+                value={locale}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setLocale(next);
+                  void tenantFetch("/api/v1/organization-locale", {
+                    method: "PUT",
+                    body: JSON.stringify({
+                      default_locale: next,
+                      enabled_locales: ["en", next],
+                    }),
+                  });
+                }}
+              >
+                <option value="en">English</option>
+                <option value="ny">Chichewa</option>
+              </Select>
+            </label>
+            {professionalKeys.length ? (
+              <p className="mt-3 text-xs text-secondary">
+                Professional translations locked: {professionalKeys.join(", ")}
+              </p>
+            ) : null}
           </Card>
         ) : null}
 

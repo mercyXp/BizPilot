@@ -66,6 +66,8 @@ pnpm dev
 
 Open `http://localhost:3000`. The marketing header uses `frontend/public/logo/BizPilot_logo.png` via `Logo`. Pricing is at `/pricing` (Basic Free, Premium K320, Entreprise K490). `/login` redirects to `/sign-in`. The home page fetches FastAPI readiness over `NEXT_PUBLIC_API_URL`.
 
+After `alembic upgrade head`, `/api/v1/health/ready` should report `schema_phase` `11`. GitHub Actions runs pytest and vitest on every pull request. Production gates are in [production-checklist.md](production-checklist.md).
+
 ## API versioning
 
 Business routes live under `/api/v1`. Additive changes stay on v1. Breaking changes require `/api/v2`.

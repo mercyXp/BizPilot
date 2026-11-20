@@ -211,6 +211,7 @@ class IndustryOut(BaseModel):
     id: UUID
     code: str
     name: str
+    config_schema: dict
     default_modules: dict
     default_settings: dict
 

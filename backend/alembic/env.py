@@ -11,6 +11,7 @@ from app.modules.audit import models as audit_models  # noqa: F401
 from app.modules.authorization import models as authorization_models  # noqa: F401
 from app.modules.catalogue import models as catalogue_models  # noqa: F401
 from app.modules.crm import models as crm_models  # noqa: F401
+from app.modules.i18n import models as i18n_models  # noqa: F401
 from app.modules.inventory import models as inventory_models  # noqa: F401
 from app.modules.payroll import models as payroll_models  # noqa: F401
 from app.modules.purchasing import models as purchasing_models  # noqa: F401

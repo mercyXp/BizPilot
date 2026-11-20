@@ -30,13 +30,31 @@ PACKS: tuple[dict, ...] = (
         "name": "Pharmacy",
         "config_schema": {
             "type": "object",
-            "properties": {"restricted_dispense": {"type": "boolean"}},
+            "properties": {
+                "restricted_dispense": {"type": "boolean"},
+                "attribute_schema": {
+                    "type": "object",
+                    "properties": {
+                        "generic_name": {"type": "string"},
+                        "strength": {"type": "string"},
+                        "restricted": {"type": "boolean"},
+                    },
+                },
+            },
         },
         "default_modules": {"catalogue": True, "inventory": True, "sales": True},
         "default_settings": {
             "modules": {"catalogue": True, "inventory": True, "sales": True},
             "inventory": {"allow_negative_stock": False},
-            "catalogue": {"track_batches": True, "track_expiry": True},
+            "catalogue": {
+                "track_batches": True,
+                "track_expiry": True,
+                "attribute_schema": {
+                    "generic_name": {"type": "string"},
+                    "strength": {"type": "string"},
+                    "restricted": {"type": "boolean"},
+                },
+            },
             "fiscal_year_start_month": 1,
         },
     },
@@ -53,7 +71,11 @@ PACKS: tuple[dict, ...] = (
         "default_settings": {
             "modules": {"catalogue": True, "inventory": True, "sales": True},
             "inventory": {"allow_negative_stock": False},
-            "catalogue": {"track_batches": False, "track_expiry": False, "variant_axes": ["size", "colour"]},
+            "catalogue": {
+                "track_batches": False,
+                "track_expiry": False,
+                "variant_axes": ["size", "colour"],
+            },
             "fiscal_year_start_month": 1,
         },
     },

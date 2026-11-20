@@ -17,8 +17,8 @@ import { chartColors, chartLegend } from "@/lib/colors";
 import { Card } from "@/components/ui/card";
 import { chartTheme, emptyTrend } from "@/components/charts/theme";
 
-const salesData = emptyTrend(["revenue"]);
-const storeData = [{ store: "This store", revenue: 0 }];
+type TrendPoint = { date?: string | null; revenue: number };
+type BranchPoint = { branch_name: string; revenue: number };
 
 function ChartTooltip({
   active,
@@ -44,14 +44,18 @@ function ChartTooltip({
   );
 }
 
-export function SalesOverviewChart() {
+export function SalesOverviewChart({ trend }: { trend?: TrendPoint[] }) {
   const reduce = useReducedMotion();
+  const salesData =
+    trend && trend.length
+      ? trend.map((point) => ({ month: point.date ?? "", revenue: point.revenue }))
+      : emptyTrend(["revenue"]);
   return (
     <Card className="p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-ink">Sales overview</h2>
-          <p className="text-xs text-secondary">Revenue · last 12 months</p>
+          <p className="text-xs text-secondary">Revenue · selected period</p>
         </div>
         <div className="flex items-center gap-2 text-[11px] text-secondary">
           <span className="h-2 w-2 rounded-full" style={{ background: chartColors.revenue }} />
@@ -83,8 +87,13 @@ export function SalesOverviewChart() {
   );
 }
 
-export function SalesByStoreChart() {
+export function SalesByStoreChart({ branches }: { branches?: BranchPoint[] }) {
   const reduce = useReducedMotion();
+  const storeData =
+    branches && branches.length
+      ? branches.map((row) => ({ store: row.branch_name, revenue: row.revenue }))
+      : [{ store: "This store", revenue: 0 }];
+  const total = storeData.reduce((sum, row) => sum + row.revenue, 0);
   return (
     <Card className="p-4">
       <div className="mb-3">
@@ -117,7 +126,7 @@ export function SalesByStoreChart() {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-2 text-right text-xs text-secondary">ZMW 0</p>
+      <p className="mt-2 text-right text-xs text-secondary">ZMW {total}</p>
     </Card>
   );
 }
