@@ -57,11 +57,14 @@ This workstation’s `registry.npmjs.org` returns HTTP 403. `frontend/.npmrc` th
 ```powershell
 cd frontend
 pnpm install
+pnpm typecheck
+pnpm lint
 pnpm test
+pnpm build
 pnpm dev
 ```
 
-Open `http://localhost:3000`. The home page fetches FastAPI readiness over `NEXT_PUBLIC_API_URL`.
+Open `http://localhost:3000`. The marketing header uses `frontend/public/logo/BizPilot_logo.png` via `Logo`. Pricing is at `/pricing` (Basic Free, Premium K320, Entreprise K490). `/login` redirects to `/sign-in`. The home page fetches FastAPI readiness over `NEXT_PUBLIC_API_URL`.
 
 ## API versioning
 

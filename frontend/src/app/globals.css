@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --color-text: #000000;
-  --color-text-secondary: #525252;
-  --color-muted: #6b7280;
+  --color-text: #0f172a;
+  --color-text-secondary: #334155;
+  --color-muted: #475569;
   --color-muted-bg: #f3f4f6;
   --color-brand: #0d9488;
   --color-brand-deep: #0f766e;
   --color-brand-soft: #ccfbf1;
-  --color-bg: #f8fafc;
+  --color-bg: #f1f5f9;
   --color-surface: #ffffff;
   --color-border: #e5e7eb;
 
@@ -133,6 +133,14 @@ body {
   .input-field[aria-invalid="true"] {
     border-color: var(--color-danger);
     box-shadow: 0 0 0 3px rgb(220 38 38 / 0.16);
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
+  }
+
+  .btn-outline {
+    @apply rounded-lg bg-surface px-4 py-2.5 text-sm font-semibold text-ink ring-1 ring-border transition hover:bg-canvas hover:ring-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2;
   }
 }
 

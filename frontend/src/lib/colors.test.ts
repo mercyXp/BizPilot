@@ -8,11 +8,11 @@ describe("design tokens", () => {
     expect(brandColors.primary).toBe("#0D9488");
     expect(brandColors.deep).toBe("#0F766E");
     expect(brandColors.soft).toBe("#CCFBF1");
-    expect(brandColors.text).toBe("#000000");
-    expect(brandColors.background).toBe("#F8FAFC");
+    expect(brandColors.text).toBe("#0F172A");
+    expect(brandColors.background).toBe("#F1F5F9");
     expect(brandColors.surface).toBe("#FFFFFF");
     expect(brandColors.border).toBe("#E5E7EB");
-    expect(brandColors.textSecondary).toBe("#525252");
+    expect(brandColors.textSecondary).toBe("#334155");
   });
 
   it("assigns a unique colour to each chart metric", () => {

@@ -4,12 +4,12 @@ export const brandColors = {
   primary: "#0D9488",
   deep: "#0F766E",
   soft: "#CCFBF1",
-  text: "#000000",
-  textSecondary: "#525252",
-  background: "#F8FAFC",
+  text: "#0F172A",
+  textSecondary: "#334155",
+  background: "#F1F5F9",
   surface: "#FFFFFF",
   border: "#E5E7EB",
-  muted: "#6B7280",
+  muted: "#475569",
   mutedBackground: "#F3F4F6",
 } as const;
 

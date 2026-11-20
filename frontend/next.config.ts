@@ -4,6 +4,15 @@ const apiOrigin = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/login",
+        destination: "/sign-in",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
