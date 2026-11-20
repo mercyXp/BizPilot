@@ -11,13 +11,13 @@ export function SiteHeader({ active }: SiteHeaderProps) {
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <BrandLogo />
-        <nav className="flex items-center gap-5 text-sm sm:gap-6">
+        <nav className="flex items-center gap-3 text-sm sm:gap-6">
           <Link
             href="/#pos"
             className={
               active === "product"
-                ? "font-semibold text-slate-900"
-                : "text-slate-600 hover:text-slate-900"
+                ? "hidden font-semibold text-slate-900 sm:inline"
+                : "hidden text-slate-600 hover:text-slate-900 sm:inline"
             }
           >
             Product
@@ -34,7 +34,7 @@ export function SiteHeader({ active }: SiteHeaderProps) {
           </Link>
           <Link
             href="/sign-up"
-            className="rounded-full bg-brand-600 px-3.5 py-1.5 font-semibold text-white hover:bg-brand-700"
+            className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 sm:px-3.5 sm:text-sm"
           >
             Get started
           </Link>

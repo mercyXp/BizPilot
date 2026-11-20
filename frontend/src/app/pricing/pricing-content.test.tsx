@@ -54,8 +54,8 @@ describe("PricingContent", () => {
     expect(
       screen.getByRole("heading", { name: "What a pharmacy gets on each plan" }),
     ).toBeTruthy();
-    expect(screen.getAllByText("Medications, stock levels and transfers").length).toBeGreaterThan(0);
-    expect(screen.queryByText("Medicines, batches, stock levels and transfers")).toBeNull();
+    expect(screen.getAllByText("Medicines, batches, stock levels and transfers").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Medications, stock levels and transfers")).toBeNull();
 
     const table = screen.getByRole("table");
     const labels = within(table)

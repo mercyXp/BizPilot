@@ -183,11 +183,11 @@ export function PricingContent() {
               <table className="min-w-[720px] w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50">
-                    <th className="sticky left-0 z-10 bg-slate-50 px-6 py-5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    <th className="sticky left-0 z-10 w-44 max-w-44 bg-slate-50 px-4 py-5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:w-auto sm:max-w-none sm:px-6">
                       What you get
                     </th>
                     {PLANS.map((plan) => (
-                      <th key={plan.id} className="px-4 py-5 text-center">
+                      <th key={plan.id} className="min-w-[7.5rem] px-3 py-5 text-center sm:px-4">
                         <div className="text-sm font-semibold text-slate-900">{plan.name}</div>
                         <div className="mt-0.5 text-xs font-medium text-slate-500">
                           {plan.monthlyKw === 0 ? "Free" : `${formatKw(plan.monthlyKw)}/mo`}
@@ -201,7 +201,7 @@ export function PricingContent() {
                     <tr key={feature} className="border-t border-slate-100">
                       <th
                         scope="row"
-                        className="sticky left-0 bg-white px-6 py-3.5 text-left font-normal text-slate-700 shadow-[6px_0_10px_-8px_rgba(15,23,42,0.35)]"
+                        className="sticky left-0 w-44 max-w-44 bg-white px-4 py-3.5 text-left font-normal text-slate-700 shadow-[6px_0_10px_-8px_rgba(15,23,42,0.35)] sm:w-auto sm:max-w-none sm:px-6"
                       >
                         {featureLabel(storeType, feature)}
                       </th>
