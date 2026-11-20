@@ -11,6 +11,7 @@ from app.api.v1.schemas import (
 )
 from app.core.context import TenantContext
 from app.core.db import get_db
+from app.modules.accounting.service import seed_books
 from app.modules.authorization.catalog import build_role_seed
 from app.modules.authorization.deps import get_current_user, get_tenant_context, require_permission
 from app.modules.identity.models import User
@@ -25,6 +26,20 @@ from app.modules.tenancy.service import (
 )
 
 router = APIRouter(tags=["organizations"])
+
+
+async def _seed_ledger(session, user, organization, membership) -> None:
+    ctx = TenantContext(
+        user_id=user.id,
+        organization_id=organization.id,
+        membership_id=membership.id,
+        branch_id=None,
+        permissions=frozenset(),
+        is_platform_admin=False,
+        access_all_branches=True,
+        branch_ids=frozenset(),
+    )
+    await seed_books(session, ctx, currency=organization.base_currency_code)
 
 
 def _org_out(
@@ -67,6 +82,7 @@ async def create_org(
         base_currency_code=body.base_currency_code,
         country_code=body.country_code,
     )
+    await _seed_ledger(session, user, organization, membership)
     return _org_out(organization, membership_id=membership.id)
 
 
@@ -89,6 +105,7 @@ async def onboard(
         first_branch=body.branch.model_dump(),
         first_warehouse=body.warehouse.model_dump() if body.warehouse else None,
     )
+    await _seed_ledger(session, user, organization, membership)
     return _org_out(
         organization,
         membership_id=membership.id,

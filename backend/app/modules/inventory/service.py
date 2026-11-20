@@ -154,6 +154,34 @@ async def receive(
     )
 
 
+async def issue(
+    session: AsyncSession,
+    ctx: TenantContext,
+    *,
+    warehouse_id: UUID,
+    variant_id: UUID,
+    qty: Decimal,
+    source_type: str,
+    source_id: UUID,
+    batch_id: UUID | None = None,
+    movement_type: str = "sale_issue",
+) -> StockMovement:
+    if qty <= ZERO:
+        raise AppError(422, "Issue quantity must be positive", code="validation_error")
+    return await apply_movement(
+        session,
+        ctx,
+        warehouse_id=warehouse_id,
+        variant_id=variant_id,
+        qty_delta=-qty,
+        unit_cost=ZERO,
+        movement_type=movement_type,
+        source_type=source_type,
+        source_id=source_id,
+        batch_id=batch_id,
+    )
+
+
 async def list_balances(
     session: AsyncSession,
     ctx: TenantContext,

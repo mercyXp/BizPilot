@@ -6,7 +6,7 @@ This repository is a modular monolith: Next.js (`frontend/`) and FastAPI (`backe
 
 ## Current phase
 
-Phases 2–5 — authentication (including refresh, verify, reset, invitations), RBAC, organization onboarding, warehouses, catalogue, and inventory. Sales/POS is next.
+Phases 2–9 — authentication, RBAC, onboarding, catalogue, inventory, POS/sales, purchasing, accounting, and payroll. Grok (Phase 10) is next.
 
 Architecture: `docs/TECHNICAL_RECORD.md` and `docs/phase-0/`.
 

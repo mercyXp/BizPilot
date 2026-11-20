@@ -10,4 +10,4 @@
 
 Secrets live in `.env` (gitignored). `.env.example` is the committed template.
 
-The Phase 5 migration advances `app_metadata.schema_phase` to `5`. The API connects as `bizpilot_app`; Alembic still uses the owner role. See `docs/phase-2-4-5-report.md`.
+The Phase 9 migration advances `app_metadata.schema_phase` to `9`. The API connects as `bizpilot_app`; Alembic still uses the owner role. See `docs/phase-6-9-report.md`.

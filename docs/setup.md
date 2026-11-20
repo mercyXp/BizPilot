@@ -1,6 +1,6 @@
 # BizPilot development setup
 
-Phase 1 runs a Next.js app, a FastAPI API, PostgreSQL, and an optional Redis server. Phases 2–5 add authentication, RBAC, onboarding, catalogue, and inventory on that same API.
+Phase 1 runs a Next.js app, a FastAPI API, PostgreSQL, and an optional Redis server. Phases 2–9 add authentication, RBAC, onboarding, catalogue, inventory, POS, purchasing, accounting, and payroll on that same API.
 
 ## Prerequisites
 
@@ -62,13 +62,13 @@ Checks:
 
 - `GET http://localhost:8000/health`
 - `GET http://localhost:8000/api/v1/health`
-- `GET http://localhost:8000/api/v1/health/ready` (`schema_phase` is `5` after the Phase 5 migration)
+- `GET http://localhost:8000/api/v1/health/ready` (`schema_phase` is `9` after the Phase 9 migration)
 
 Email verification is required before `POST /api/v1/organizations` or `/organizations/onboarding`. Login is allowed unverified. In development and test, register/invite/reset responses include the token so you can complete the flow without SMTP.
 
 Refresh and logout use cookies `bp_refresh` (httpOnly) and `bp_csrf`. Send header `X-CSRF-Token` with the csrf cookie value.
 
-## Phase 2–5 API
+## Phase 2–9 API
 
 Access tokens are bearer tokens. They do not contain an organization id. Send `X-Organization-Id` on tenant routes and `X-Branch-Id` when a route is branch-scoped.
 
@@ -108,9 +108,30 @@ POST /api/v1/inventory/adjustments
 GET  /api/v1/stock-balances
 POST /api/v1/stock-transfers
 POST /api/v1/stock-counts
+POST /api/v1/customers
+POST /api/v1/pos/sessions
+POST /api/v1/pos/sessions/{id}/sales
+POST /api/v1/sales/{id}/refunds
+POST /api/v1/payments/{id}/confirm
+POST /api/v1/suppliers
+POST /api/v1/purchase-orders
+POST /api/v1/purchase-orders/{id}/approve
+POST /api/v1/goods-receipts
+POST /api/v1/supplier-invoices
+POST /api/v1/supplier-payments
+GET  /api/v1/accounts
+POST /api/v1/journals
+POST /api/v1/journals/{id}/reverse
+POST /api/v1/periods/{id}/close
+GET  /api/v1/reports/trial-balance
+POST /api/v1/expenses
+POST /api/v1/employees
+POST /api/v1/payroll-runs
 ```
 
-The two gate routes only check permissions. They do not post journals or change stock. Creating an organization copies the system roles onto that organization and makes the caller the owner. Owners have `access_all_branches`. A cashier or viewer only sees branches listed on `membership_branches` unless `access_all_branches` is set.
+Sale complete, refunds, GRN post, journal post, and payroll run require header `Idempotency-Key`.
+
+The two gate routes only check permissions. Creating an organization copies the system roles onto that organization, seeds a generic chart of accounts and fiscal periods, and makes the caller the owner. Owners have `access_all_branches`. A cashier or viewer only sees branches listed on `membership_branches` unless `access_all_branches` is set.
 
 Denied requests return `403` with `error.code` of `permission_denied` and no stack trace.
 

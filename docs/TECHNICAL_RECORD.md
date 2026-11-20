@@ -1,7 +1,7 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phases 2–5 implemented through catalogue and inventory  
+**Status:** Phases 2–9 implemented through sales, purchasing, accounting, and payroll  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
@@ -38,7 +38,11 @@ This file is the index of approved product and technical decisions. Phase docume
 | 3 | RBAC | Implemented. See `docs/phase-3-report.md` |
 | 4 | Org, branches, industry | Implemented. Onboarding, settings, warehouses, industry packs |
 | 5 | Catalogue and inventory | Implemented. Products, prices, movements, transfers, counts, batches |
-| 6–15 | See roadmap document | Not started |
+| 6 | Sales and POS | Implemented. Sessions, payments, receipts, refunds, idempotency. See `docs/phase-6-9-report.md` |
+| 7 | CRM and purchasing | Implemented. Customers, PO/GRN/invoices/payments |
+| 8 | Accounting | Implemented. COA, periods, PostingEngine, AR/AP, expenses, banks, statements |
+| 9 | Payroll | Implemented. Employees, leave, configurable components, runs |
+| 10–15 | See roadmap document | Not started |
 
 ## Decision log
 
@@ -57,7 +61,14 @@ Decisions taken during Phase 0 are listed in `docs/phase-0/06-roadmap-decisions-
 | P2-2 | Invitations include `access_all_branches` in addition to `branch_ids` | Otherwise an invited manager cannot be granted every branch without listing them |
 | P2-3 | Email/invite/reset token values are returned in non-production responses | There is no SMTP adapter yet. Production omits the values |
 | P4-1 | Creating a branch also creates a default warehouse `{branch_code}-WH` | Phase 4 requires warehouses; stock cannot exist without one |
-| P5-1 | `InventoryService` is the only writer of `stock_movements` / `stock_balances`. Source type `purchase_order` is rejected | Matches “PO does not receive stock”. GRN remains Phase 7 |
+| P5-1 | `InventoryService` is the only writer of `stock_movements` / `stock_balances`. Source type `purchase_order` is rejected | Matches “PO does not receive stock”. GRN is Phase 7 |
+| P6-1 | Mobile money uses `mock_mobile_pending` until `POST /payments/{id}/confirm` | Decision D22. Selecting the method never completes the payment |
+| P6-2 | `awaiting_payment` sales do not issue stock | Stock and journals wait until allocated completed payments equal the total |
+| P7-1 | Over-receive is blocked | Safer default than a permissioned exception |
+| P8-1 | COA, maps, fiscal year, and periods are seeded at organization create | Decision D14 |
+| P8-2 | Domain modules call `PostingEngine` in the same transaction and write `accounting_post_requested` | Decision D13 |
+| P9-1 | `employees.base_salary` is stored on the employee | Phase 0 had no assignment table; a run still needs a base |
+| P9-2 | Statutory components are configurable rows and cannot be labelled official | Decision D16 |
 
 ## Environment and secrets
 

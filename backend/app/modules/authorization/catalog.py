@@ -27,6 +27,7 @@ PERMISSIONS: tuple[tuple[str, str, str], ...] = (
     ("inventory.adjust", "inventory", "Adjust stock"),
     ("inventory.transfer", "inventory", "Transfer stock"),
     ("inventory.count", "inventory", "Count stock"),
+    ("purchases.view", "purchasing", "View purchase documents"),
     ("purchases.create", "purchasing", "Create purchase documents"),
     ("purchases.approve", "purchasing", "Approve purchases"),
     ("purchases.receive", "purchasing", "Receive goods"),
@@ -72,6 +73,7 @@ _ORG_ADMIN: frozenset[str] = frozenset(
         "inventory.adjust",
         "inventory.transfer",
         "inventory.count",
+        "purchases.view",
         "purchases.create",
         "purchases.approve",
         "purchases.receive",
@@ -101,6 +103,7 @@ _MANAGER: frozenset[str] = frozenset(
         "inventory.adjust",
         "inventory.transfer",
         "inventory.count",
+        "purchases.view",
         "purchases.create",
         "purchases.approve",
         "purchases.receive",
@@ -163,6 +166,7 @@ _INVENTORY_MANAGER: frozenset[str] = frozenset(
 _PROCUREMENT: frozenset[str] = frozenset(
     {
         "catalogue.view",
+        "purchases.view",
         "purchases.create",
         "purchases.approve",
         "purchases.receive",
