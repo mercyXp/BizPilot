@@ -12,7 +12,14 @@ def register_middleware(app: FastAPI, settings: Settings) -> None:
         allow_origins=settings.cors_origin_list,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Organization-Id", "X-Branch-Id", "Idempotency-Key"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "X-Organization-Id",
+            "X-Branch-Id",
+            "Idempotency-Key",
+            "X-CSRF-Token",
+        ],
     )
 
     @app.middleware("http")

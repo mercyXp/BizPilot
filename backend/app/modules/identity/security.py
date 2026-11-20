@@ -37,6 +37,14 @@ def new_refresh_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def new_action_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def new_csrf_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
 def create_access_token(*, user_id: UUID, session_id: UUID, session_version: int) -> str:
     settings = get_settings()
     now = datetime.now(UTC)
@@ -56,3 +64,11 @@ def decode_access_token(token: str) -> dict:
         return jwt.decode(token, settings.secret_key, algorithms=["HS256"])
     except jwt.PyJWTError as exc:
         raise AppError(401, "Invalid or expired token", code="unauthenticated") from exc
+
+
+def aware(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value

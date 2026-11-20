@@ -33,13 +33,26 @@ def assert_error(response: Response, status: int, code: str) -> None:
     assert "password_hash" not in response.text
 
 
-async def register(client: AsyncClient, email: str, full_name: str = "Test User") -> dict:
+async def register(
+    client: AsyncClient,
+    email: str,
+    full_name: str = "Test User",
+    *,
+    verify: bool = True,
+) -> dict:
     response = await client.post(
         "/api/v1/auth/register",
         json={"email": email, "password": "password123", "full_name": full_name},
     )
     assert response.status_code == 201, response.text
-    return response.json()
+    body = response.json()
+    if verify:
+        token = body.get("verification_token")
+        assert token, body
+        verified = await client.post("/api/v1/auth/verify-email", json={"token": token})
+        assert verified.status_code == 200, verified.text
+        body["email_verified"] = True
+    return body
 
 
 async def login(client: AsyncClient, email: str) -> str:

@@ -7,21 +7,69 @@ from app.modules.authorization.models import (
     RolePermission,
     UserPermissionOverride,
 )
-from app.modules.identity.models import User, UserSession
-from app.modules.tenancy.models import Branch, Industry, Organization, OrganizationMembership
+from app.modules.catalogue.models import (
+    BranchProduct,
+    Product,
+    ProductCategory,
+    ProductPrice,
+    ProductTaxCategory,
+    ProductVariant,
+    UnitOfMeasure,
+)
+from app.modules.identity.models import User, UserActionToken, UserSession
+from app.modules.inventory.models import (
+    DocumentSequence,
+    ProductBatch,
+    StockBalance,
+    StockCount,
+    StockCountItem,
+    StockMovement,
+    StockTransfer,
+    StockTransferItem,
+)
+from app.modules.tenancy.models import (
+    Branch,
+    Industry,
+    Invitation,
+    Organization,
+    OrganizationLocale,
+    OrganizationMembership,
+    OrganizationSettings,
+    Warehouse,
+)
 
 __all__ = [
     "AppMetadata",
     "Branch",
+    "BranchProduct",
+    "DocumentSequence",
     "Industry",
+    "Invitation",
     "MembershipBranch",
     "MembershipRole",
     "Organization",
+    "OrganizationLocale",
     "OrganizationMembership",
+    "OrganizationSettings",
     "Permission",
+    "Product",
+    "ProductBatch",
+    "ProductCategory",
+    "ProductPrice",
+    "ProductTaxCategory",
+    "ProductVariant",
     "Role",
     "RolePermission",
+    "StockBalance",
+    "StockCount",
+    "StockCountItem",
+    "StockMovement",
+    "StockTransfer",
+    "StockTransferItem",
+    "UnitOfMeasure",
     "User",
+    "UserActionToken",
     "UserPermissionOverride",
     "UserSession",
+    "Warehouse",
 ]

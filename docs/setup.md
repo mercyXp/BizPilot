@@ -1,6 +1,6 @@
 # BizPilot development setup
 
-Phase 1 runs a Next.js app, a FastAPI API, PostgreSQL, and an optional Redis server. Phase 3 adds authentication, organizations, branches, and role checks on that same API.
+Phase 1 runs a Next.js app, a FastAPI API, PostgreSQL, and an optional Redis server. Phases 2–5 add authentication, RBAC, onboarding, catalogue, and inventory on that same API.
 
 ## Prerequisites
 
@@ -62,18 +62,33 @@ Checks:
 
 - `GET http://localhost:8000/health`
 - `GET http://localhost:8000/api/v1/health`
-- `GET http://localhost:8000/api/v1/health/ready` (`schema_phase` is `3` after the Phase 3 migration)
+- `GET http://localhost:8000/api/v1/health/ready` (`schema_phase` is `5` after the Phase 5 migration)
 
-## Phase 3 API
+Email verification is required before `POST /api/v1/organizations` or `/organizations/onboarding`. Login is allowed unverified. In development and test, register/invite/reset responses include the token so you can complete the flow without SMTP.
+
+Refresh and logout use cookies `bp_refresh` (httpOnly) and `bp_csrf`. Send header `X-CSRF-Token` with the csrf cookie value.
+
+## Phase 2–5 API
 
 Access tokens are bearer tokens. They do not contain an organization id. Send `X-Organization-Id` on tenant routes and `X-Branch-Id` when a route is branch-scoped.
 
 ```http
 POST /api/v1/auth/register
 POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+POST /api/v1/auth/verify-email
+POST /api/v1/auth/password-reset
 GET  /api/v1/me
 POST /api/v1/organizations
+POST /api/v1/organizations/onboarding
 GET  /api/v1/organizations
+GET  /api/v1/organizations/current
+GET  /api/v1/organization-settings
+PUT  /api/v1/organization-settings
+GET  /api/v1/industries
+POST /api/v1/invitations
+POST /api/v1/invitations/accept
 POST /api/v1/branches
 GET  /api/v1/branches
 GET  /api/v1/branches/{branch_id}
@@ -84,6 +99,15 @@ PUT  /api/v1/memberships/{membership_id}/branches
 PUT  /api/v1/memberships/{membership_id}/overrides
 POST /api/v1/authorization/gates/journal-post
 POST /api/v1/authorization/gates/inventory-adjust
+POST /api/v1/warehouses
+GET  /api/v1/warehouses
+POST /api/v1/products
+POST /api/v1/product-prices
+GET  /api/v1/product-prices/resolve
+POST /api/v1/inventory/adjustments
+GET  /api/v1/stock-balances
+POST /api/v1/stock-transfers
+POST /api/v1/stock-counts
 ```
 
 The two gate routes only check permissions. They do not post journals or change stock. Creating an organization copies the system roles onto that organization and makes the caller the owner. Owners have `access_all_branches`. A cashier or viewer only sees branches listed on `membership_branches` unless `access_all_branches` is set.

@@ -41,6 +41,7 @@ class User(Base):
         Boolean, nullable=False, default=True, server_default=text("true")
     )
     totp_secret_encrypted: Mapped[str | None] = mapped_column(Text)
+    totp_pending_encrypted: Mapped[str | None] = mapped_column(Text)
     session_version: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, server_default=text("1")
     )
@@ -69,6 +70,29 @@ class UserSession(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     user_agent: Mapped[str | None] = mapped_column(String(512))
     ip: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class UserActionToken(Base):
+    __tablename__ = "user_action_tokens"
+    __table_args__ = (
+        CheckConstraint(
+            "purpose IN ('verify_email', 'password_reset')",
+            name="ck_user_action_tokens_purpose",
+        ),
+        Index("ix_user_action_tokens_user_purpose", "user_id", "purpose"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=new_uuid)
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    purpose: Mapped[str] = mapped_column(String(32), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

@@ -16,6 +16,8 @@ PERMISSIONS: tuple[tuple[str, str, str], ...] = (
     ("branches.manage", "organization", "Create and update branches"),
     ("users.invite", "identity", "Invite users"),
     ("users.manage", "identity", "Manage memberships, roles, and branch grants"),
+    ("catalogue.view", "catalogue", "View products, variants, and prices"),
+    ("catalogue.manage", "catalogue", "Manage products, variants, and prices"),
     ("sales.create", "sales", "Create sales"),
     ("sales.view", "sales", "View sales"),
     ("sales.refund", "sales", "Refund sales"),
@@ -59,6 +61,8 @@ _ORG_ADMIN: frozenset[str] = frozenset(
         "branches.manage",
         "users.invite",
         "users.manage",
+        "catalogue.view",
+        "catalogue.manage",
         "sales.create",
         "sales.view",
         "sales.refund",
@@ -86,6 +90,8 @@ _ORG_ADMIN: frozenset[str] = frozenset(
 )
 _MANAGER: frozenset[str] = frozenset(
     {
+        "catalogue.view",
+        "catalogue.manage",
         "sales.create",
         "sales.view",
         "sales.refund",
@@ -121,6 +127,7 @@ _ACCOUNTANT: frozenset[str] = frozenset(
 )
 _CASHIER: frozenset[str] = frozenset(
     {
+        "catalogue.view",
         "sales.create",
         "sales.view",
         "sales.refund",
@@ -132,6 +139,7 @@ _CASHIER: frozenset[str] = frozenset(
 )
 _SALES: frozenset[str] = frozenset(
     {
+        "catalogue.view",
         "sales.create",
         "sales.view",
         "customers.manage",
@@ -141,6 +149,8 @@ _SALES: frozenset[str] = frozenset(
 )
 _INVENTORY_MANAGER: frozenset[str] = frozenset(
     {
+        "catalogue.view",
+        "catalogue.manage",
         "inventory.view",
         "inventory.adjust",
         "inventory.transfer",
@@ -152,6 +162,7 @@ _INVENTORY_MANAGER: frozenset[str] = frozenset(
 )
 _PROCUREMENT: frozenset[str] = frozenset(
     {
+        "catalogue.view",
         "purchases.create",
         "purchases.approve",
         "purchases.receive",
@@ -170,6 +181,7 @@ _HR: frozenset[str] = frozenset(
 )
 _VIEWER: frozenset[str] = frozenset(
     {
+        "catalogue.view",
         "sales.view",
         "inventory.view",
         "accounting.reports.view",

@@ -1,8 +1,9 @@
 import json
+import logging
 from uuid import UUID
 
 from sqlalchemy import select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.context import TenantContext
@@ -10,7 +11,23 @@ from app.core.errors import AppError
 from app.core.ids import new_uuid
 from app.core.rls import set_request_context
 from app.modules.identity.models import User
-from app.modules.tenancy.models import Branch, Organization, OrganizationMembership
+from app.modules.identity.security import hash_token, new_action_token
+from app.modules.identity.service import require_verified_email
+from app.modules.industry.packs import default_settings_for
+from app.modules.tenancy.models import (
+    Branch,
+    Industry,
+    Invitation,
+    Organization,
+    OrganizationLocale,
+    OrganizationMembership,
+    OrganizationSettings,
+    Warehouse,
+)
+
+logger = logging.getLogger(__name__)
+
+INVITE_TTL_DAYS = 7
 
 
 async def create_organization(
@@ -20,7 +37,20 @@ async def create_organization(
     name: str,
     legal_name: str | None,
     roles_payload: list[dict[str, object]],
-) -> tuple[Organization, OrganizationMembership]:
+    industry_code: str = "general",
+    timezone: str = "Africa/Lusaka",
+    base_currency_code: str = "ZMW",
+    country_code: str = "ZM",
+    first_branch: dict | None = None,
+    first_warehouse: dict | None = None,
+) -> tuple[Organization, OrganizationMembership, Branch | None, Warehouse | None]:
+    require_verified_email(user)
+    industry = await session.scalar(
+        select(Industry).where(Industry.code == industry_code, Industry.is_active.is_(True))
+    )
+    if industry is None:
+        raise AppError(422, "Unknown industry", code="validation_error")
+
     org_id = new_uuid()
     membership_id = new_uuid()
     owner_role_link_id = new_uuid()
@@ -34,7 +64,11 @@ async def create_organization(
                 CAST(:owner_role_link_id AS uuid),
                 :name,
                 :legal_name,
-                CAST(:roles AS jsonb)
+                CAST(:roles AS jsonb),
+                :industry_code,
+                :timezone,
+                :currency,
+                :country
             )
             """
         ),
@@ -45,6 +79,10 @@ async def create_organization(
             "name": name.strip(),
             "legal_name": legal_name.strip() if legal_name else None,
             "roles": json.dumps(roles_payload),
+            "industry_code": industry.code,
+            "timezone": timezone,
+            "currency": base_currency_code,
+            "country": country_code,
         },
     )
     await set_request_context(session, user_id=user.id, organization_id=org_id)
@@ -52,7 +90,49 @@ async def create_organization(
     membership = await session.get(OrganizationMembership, membership_id)
     if org is None or membership is None:
         raise AppError(500, "Organization bootstrap did not persist", code="internal_error")
-    return org, membership
+
+    settings = default_settings_for({"default_settings": industry.default_settings})
+    session.add(OrganizationSettings(organization_id=org.id, settings=settings))
+    session.add(
+        OrganizationLocale(organization_id=org.id, default_locale="en", enabled_locales=["en"])
+    )
+    await _ensure_each_uom(session, org.id)
+
+    branch = None
+    warehouse = None
+    ctx = TenantContext(
+        user_id=user.id,
+        organization_id=org.id,
+        membership_id=membership.id,
+        branch_id=None,
+        permissions=frozenset(),
+        is_platform_admin=False,
+        access_all_branches=True,
+        branch_ids=frozenset(),
+    )
+    if first_branch:
+        branch = await create_branch(
+            session,
+            ctx,
+            code=first_branch["code"],
+            name=first_branch["name"],
+            phone=first_branch.get("phone"),
+            create_default_warehouse=first_warehouse is None,
+        )
+        if first_warehouse:
+            warehouse = await create_warehouse(
+                session,
+                ctx,
+                branch_id=branch.id,
+                code=first_warehouse["code"],
+                name=first_warehouse["name"],
+                is_default=True,
+            )
+        else:
+            warehouses = await list_warehouses(session, ctx, branch_id=branch.id)
+            warehouse = warehouses[0] if warehouses else None
+    await session.flush()
+    return org, membership, branch, warehouse
 
 
 async def list_organizations(session: AsyncSession, user: User) -> list[Organization]:
@@ -70,6 +150,58 @@ async def list_organizations(session: AsyncSession, user: User) -> list[Organiza
     return list(rows)
 
 
+async def update_organization(
+    session: AsyncSession,
+    ctx: TenantContext,
+    *,
+    name: str | None,
+    legal_name: str | None,
+    timezone: str | None,
+    base_currency_code: str | None,
+    industry_code: str | None,
+) -> Organization:
+    org = await session.get(Organization, ctx.organization_id)
+    if org is None:
+        raise AppError(404, "Organization not found", code="not_found")
+    if name is not None:
+        org.name = name.strip()
+    if legal_name is not None:
+        org.legal_name = legal_name.strip() or None
+    if timezone is not None:
+        org.timezone = timezone
+    if base_currency_code is not None:
+        org.base_currency_code = base_currency_code
+    if industry_code is not None:
+        industry = await session.scalar(
+            select(Industry).where(Industry.code == industry_code, Industry.is_active.is_(True))
+        )
+        if industry is None:
+            raise AppError(422, "Unknown industry", code="validation_error")
+        org.industry_id = industry.id
+    await session.flush()
+    return org
+
+
+async def get_settings(session: AsyncSession, ctx: TenantContext) -> OrganizationSettings:
+    row = await session.scalar(
+        select(OrganizationSettings).where(
+            OrganizationSettings.organization_id == ctx.organization_id
+        )
+    )
+    if row is None:
+        row = OrganizationSettings(organization_id=ctx.organization_id, settings={})
+        session.add(row)
+        await session.flush()
+    return row
+
+
+async def put_settings(session: AsyncSession, ctx: TenantContext, settings: dict) -> OrganizationSettings:
+    row = await get_settings(session, ctx)
+    row.settings = settings
+    await session.flush()
+    return row
+
+
 async def create_branch(
     session: AsyncSession,
     ctx: TenantContext,
@@ -77,6 +209,7 @@ async def create_branch(
     code: str,
     name: str,
     phone: str | None,
+    create_default_warehouse: bool = True,
 ) -> Branch:
     branch = Branch(
         organization_id=ctx.organization_id,
@@ -90,6 +223,15 @@ async def create_branch(
         await session.flush()
     except IntegrityError as exc:
         raise AppError(409, "Branch code already exists", code="conflict") from exc
+    if create_default_warehouse:
+        await create_warehouse(
+            session,
+            ctx,
+            branch_id=branch.id,
+            code=f"{branch.code}-WH",
+            name=f"{branch.name} warehouse",
+            is_default=True,
+        )
     return branch
 
 
@@ -110,3 +252,185 @@ async def get_branch(session: AsyncSession, ctx: TenantContext, branch_id: UUID)
     if not ctx.can_access_branch(branch.id):
         raise AppError(403, "Branch is not granted to this membership", code="permission_denied")
     return branch
+
+
+async def create_warehouse(
+    session: AsyncSession,
+    ctx: TenantContext,
+    *,
+    branch_id: UUID,
+    code: str,
+    name: str,
+    is_default: bool,
+) -> Warehouse:
+    branch = await get_branch(session, ctx, branch_id)
+    if is_default:
+        existing = await session.scalars(
+            select(Warehouse).where(
+                Warehouse.branch_id == branch.id,
+                Warehouse.is_default.is_(True),
+            )
+        )
+        for row in existing:
+            row.is_default = False
+    warehouse = Warehouse(
+        organization_id=ctx.organization_id,
+        branch_id=branch.id,
+        code=code.strip().upper(),
+        name=name.strip(),
+        is_default=is_default,
+        is_active=True,
+    )
+    session.add(warehouse)
+    try:
+        await session.flush()
+    except IntegrityError as exc:
+        raise AppError(409, "Warehouse code already exists", code="conflict") from exc
+    return warehouse
+
+
+async def list_warehouses(
+    session: AsyncSession,
+    ctx: TenantContext,
+    branch_id: UUID | None = None,
+) -> list[Warehouse]:
+    statement = select(Warehouse).where(Warehouse.organization_id == ctx.organization_id)
+    if branch_id is not None:
+        await get_branch(session, ctx, branch_id)
+        statement = statement.where(Warehouse.branch_id == branch_id)
+    elif not ctx.access_all_branches:
+        if not ctx.branch_ids:
+            return []
+        statement = statement.where(Warehouse.branch_id.in_(ctx.branch_ids))
+    rows = await session.scalars(statement.order_by(Warehouse.code))
+    return list(rows)
+
+
+async def get_warehouse(session: AsyncSession, ctx: TenantContext, warehouse_id: UUID) -> Warehouse:
+    warehouse = await session.get(Warehouse, warehouse_id)
+    if warehouse is None:
+        raise AppError(404, "Warehouse not found", code="not_found")
+    if not ctx.can_access_branch(warehouse.branch_id):
+        raise AppError(403, "Branch is not granted to this membership", code="permission_denied")
+    return warehouse
+
+
+async def list_industries(session: AsyncSession) -> list[Industry]:
+    rows = await session.scalars(
+        select(Industry).where(Industry.is_active.is_(True)).order_by(Industry.name)
+    )
+    return list(rows)
+
+
+async def create_invitation(
+    session: AsyncSession,
+    ctx: TenantContext,
+    *,
+    email: str,
+    role_codes: list[str],
+    branch_ids: list[UUID],
+    access_all_branches: bool,
+) -> tuple[Invitation, str]:
+    from app.modules.authorization.models import Role
+
+    email_norm = email.strip().lower()
+    roles = list(
+        await session.scalars(
+            select(Role).where(
+                Role.organization_id == ctx.organization_id,
+                Role.code.in_(role_codes),
+            )
+        )
+    )
+    if len(roles) != len(set(role_codes)):
+        raise AppError(422, "Unknown role", code="validation_error")
+    if any(role.code == "owner" for role in roles) and "org.manage" not in ctx.permissions:
+        raise AppError(403, "Only an owner can assign the owner role", code="permission_denied")
+    for branch_id in branch_ids:
+        await get_branch(session, ctx, branch_id)
+
+    raw = new_action_token()
+    invitation = Invitation(
+        organization_id=ctx.organization_id,
+        email=email_norm,
+        role_ids=[role.id for role in roles],
+        branch_ids=list(dict.fromkeys(branch_ids)),
+        access_all_branches=access_all_branches,
+        token_hash=hash_token(raw),
+        expires_at=_invite_expiry(),
+        invited_by_user_id=ctx.user_id,
+    )
+    session.add(invitation)
+    await session.flush()
+    logger.info("email_event invitation queued", extra={"email": email_norm})
+    return invitation, raw
+
+
+async def list_invitations(session: AsyncSession, ctx: TenantContext) -> list[Invitation]:
+    rows = await session.scalars(
+        select(Invitation)
+        .where(Invitation.organization_id == ctx.organization_id)
+        .order_by(Invitation.created_at.desc())
+    )
+    return list(rows)
+
+
+async def accept_invitation(session: AsyncSession, user: User, raw_token: str) -> UUID:
+    await set_request_context(session, user_id=user.id, organization_id=None)
+    membership_id = new_uuid()
+    try:
+        result = await session.execute(
+            text(
+                """
+                SELECT app_accept_invitation(
+                    :token_hash,
+                    CAST(:membership_id AS uuid)
+                )
+                """
+            ),
+            {"token_hash": hash_token(raw_token), "membership_id": str(membership_id)},
+        )
+        result.scalar_one()
+    except DBAPIError as exc:
+        _raise_invitation_error(exc)
+    return membership_id
+
+
+def allow_negative_stock(settings: dict) -> bool:
+    inventory = settings.get("inventory") if isinstance(settings, dict) else None
+    if not isinstance(inventory, dict):
+        return False
+    return bool(inventory.get("allow_negative_stock"))
+
+
+async def _ensure_each_uom(session: AsyncSession, organization_id: UUID) -> None:
+    await session.execute(
+        text(
+            """
+            INSERT INTO units_of_measure (id, organization_id, code, name, is_integer)
+            VALUES (CAST(:id AS uuid), CAST(:org AS uuid), 'EA', 'Each', true)
+            ON CONFLICT (organization_id, code) DO NOTHING
+            """
+        ),
+        {"id": str(new_uuid()), "org": str(organization_id)},
+    )
+
+
+def _invite_expiry():
+    from datetime import UTC, datetime, timedelta
+
+    return datetime.now(UTC) + timedelta(days=INVITE_TTL_DAYS)
+
+
+def _raise_invitation_error(exc: DBAPIError) -> None:
+    orig = exc.orig
+    state = getattr(orig, "sqlstate", None)
+    if state == "P0002":
+        raise AppError(404, "Invitation not found", code="not_found") from exc
+    if state == "22023":
+        raise AppError(400, "Invitation is expired or already used", code="validation_error") from exc
+    if state == "42501":
+        raise AppError(403, "Invitation does not match this account", code="permission_denied") from exc
+    if state == "23505":
+        raise AppError(409, "User is already a member", code="conflict") from exc
+    raise AppError(400, "Invitation could not be accepted", code="validation_error") from exc

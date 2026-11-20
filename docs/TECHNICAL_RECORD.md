@@ -1,7 +1,7 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phase 3 RBAC implemented — Phase 2 identity flows still incomplete  
+**Status:** Phases 2–5 implemented through catalogue and inventory  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
@@ -34,9 +34,11 @@ This file is the index of approved product and technical decisions. Phase docume
 | --- | --- | --- |
 | 0 | Product specification and architecture | Recorded in `docs/phase-0/` |
 | 1 | Foundation | Scaffold was in place; health, config, logging, and Alembic still run |
-| 2 | Auth and tenancy | Partial. Register, login, access JWT, organizations, memberships, branches, and RLS exist because Phase 3 cannot be tested without them. Refresh rotation, logout, email verification, password reset, and invitations are not built |
+| 2 | Auth and tenancy | Implemented. Refresh rotation, logout, email verification, password reset, invitations, optional TOTP. See `docs/phase-2-4-5-report.md` |
 | 3 | RBAC | Implemented. See `docs/phase-3-report.md` |
-| 4–15 | See roadmap document | Not started |
+| 4 | Org, branches, industry | Implemented. Onboarding, settings, warehouses, industry packs |
+| 5 | Catalogue and inventory | Implemented. Products, prices, movements, transfers, counts, batches |
+| 6–15 | See roadmap document | Not started |
 
 ## Decision log
 
@@ -51,6 +53,11 @@ Decisions taken during Phase 0 are listed in `docs/phase-0/06-roadmap-decisions-
 | P3-5 | `users.session_version` backs the access-token `pv` claim | The security spec requires `pv`. Password change is not implemented, so the value stays `1` until that flow exists |
 | P3-6 | System roles are copied per organization. `platform.orgs.manage` is never copied. Cashiers do not get `accounting.journal.post`. Viewers do not get `inventory.adjust` | Phase 0 role matrix. Cashier `sales.refund` is present as the limited refund grant; amount limits wait for the sales module |
 | P3-7 | Journal-post and inventory-adjust routes are authorization gates only | Phase 3 has to prove 403s. It does not create journals or stock movements |
+| P2-1 | Refresh token is an httpOnly cookie; CSRF is a non-httpOnly cookie plus `X-CSRF-Token` | Decision D3 |
+| P2-2 | Invitations include `access_all_branches` in addition to `branch_ids` | Otherwise an invited manager cannot be granted every branch without listing them |
+| P2-3 | Email/invite/reset token values are returned in non-production responses | There is no SMTP adapter yet. Production omits the values |
+| P4-1 | Creating a branch also creates a default warehouse `{branch_code}-WH` | Phase 4 requires warehouses; stock cannot exist without one |
+| P5-1 | `InventoryService` is the only writer of `stock_movements` / `stock_balances`. Source type `purchase_order` is rejected | Matches “PO does not receive stock”. GRN remains Phase 7 |
 
 ## Environment and secrets
 

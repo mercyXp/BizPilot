@@ -6,7 +6,7 @@ This repository is a modular monolith: Next.js (`frontend/`) and FastAPI (`backe
 
 ## Current phase
 
-Phase 3 — role-based access control. Register, login, organizations, branches, and row-level security are in place so permissions can be enforced. Refresh tokens, email verification, and invitations are still outstanding.
+Phases 2–5 — authentication (including refresh, verify, reset, invitations), RBAC, organization onboarding, warehouses, catalogue, and inventory. Sales/POS is next.
 
 Architecture: `docs/TECHNICAL_RECORD.md` and `docs/phase-0/`.
 
