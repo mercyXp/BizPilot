@@ -6,6 +6,16 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import get_settings
 from app.core.db import Base
 from app import models  # noqa: F401
+from app.modules.accounting import models as accounting_models  # noqa: F401
+from app.modules.audit import models as audit_models  # noqa: F401
+from app.modules.authorization import models as authorization_models  # noqa: F401
+from app.modules.catalogue import models as catalogue_models  # noqa: F401
+from app.modules.crm import models as crm_models  # noqa: F401
+from app.modules.inventory import models as inventory_models  # noqa: F401
+from app.modules.payroll import models as payroll_models  # noqa: F401
+from app.modules.purchasing import models as purchasing_models  # noqa: F401
+from app.modules.sales import models as sales_models  # noqa: F401
+from app.modules.tenancy import models as tenancy_models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

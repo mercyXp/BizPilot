@@ -1,8 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, String, func
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, func, text
+from sqlalchemy.dialects.postgresql import ARRAY, UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -17,6 +17,15 @@ class Invitation(Base):
         PGUUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
     )
     email: Mapped[str] = mapped_column(String(320), nullable=False)
+    role_ids: Mapped[list[UUID]] = mapped_column(
+        ARRAY(PGUUID(as_uuid=True)), nullable=False, server_default=text("'{}'")
+    )
+    branch_ids: Mapped[list[UUID]] = mapped_column(
+        ARRAY(PGUUID(as_uuid=True)), nullable=False, server_default=text("'{}'")
+    )
+    access_all_branches: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     invited_by_user_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=False

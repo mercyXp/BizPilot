@@ -11,6 +11,7 @@ from app.core.security import decode_access_token
 from app.core.tenancy import TenantContext, apply_rls
 from app.models.session import UserSession
 from app.models.user import User
+from app.modules.authorization.service import load_tenant_context
 from app.modules.tenancy.service import get_active_membership, get_organization
 
 
@@ -74,15 +75,23 @@ async def get_tenant_context(
     except ValueError as exc:
         raise ApiError(400, "validation_error", "X-Organization-Id is not a valid UUID") from exc
 
-    membership = await get_active_membership(db, user, organization_id)
-    request.state.organization = await get_organization(db, organization_id)
-    context = TenantContext(
-        user_id=user.id,
-        session_id=request.state.session.id,
+    branch_id = None
+    raw_branch = request.headers.get("x-branch-id")
+    if raw_branch:
+        try:
+            branch_id = UUID(raw_branch)
+        except ValueError as exc:
+            raise ApiError(400, "validation_error", "X-Branch-Id is not a valid UUID") from exc
+
+    context = await load_tenant_context(
+        db,
+        user,
         organization_id=organization_id,
-        membership_id=membership.id,
-        is_owner=membership.is_owner,
-        access_all_branches=membership.access_all_branches,
+        branch_id=branch_id,
     )
+    context.session_id = request.state.session.id
+    membership = await get_active_membership(db, user, organization_id)
+    context.is_owner = membership.is_owner
+    request.state.organization = await get_organization(db, organization_id)
     request.state.tenant = context
     return context

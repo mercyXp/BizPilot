@@ -15,6 +15,9 @@ class Organization(Base):
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=new_uuid)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     legal_name: Mapped[str | None] = mapped_column(String(200))
+    industry_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("industries.id")
+    )
     country_code: Mapped[str] = mapped_column(String(2), nullable=False, default="ZM")
     base_currency_code: Mapped[str] = mapped_column(String(3), nullable=False, default="ZMW")
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="Africa/Lusaka")

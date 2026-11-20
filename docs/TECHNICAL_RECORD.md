@@ -1,7 +1,7 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phase 2 complete  
+**Status:** Phase 3–9 ported onto the main scaffold (RBAC through payroll) plus public pricing UI  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
@@ -37,7 +37,14 @@ This file is the index of approved product and technical decisions. Do not contr
 | 0 | Product specification and architecture | Completed (approved by proceeding to Phase 1) |
 | 1 | Project foundation | Completed |
 | 2 | Authentication and multi-tenancy | Completed |
-| 3–15 | See roadmap | Not started |
+| 3 | RBAC | Completed (ported onto main auth/tenancy) |
+| 4 | Org, branches, industry | Completed |
+| 5 | Catalogue and inventory | Completed |
+| 6 | Sales and POS | Completed |
+| 7 | CRM and purchasing | Completed |
+| 8 | Accounting | Completed |
+| 9 | Payroll | Completed |
+| 10–15 | See roadmap | Not started |
 
 ## Implemented modules
 
@@ -52,6 +59,9 @@ This file is the index of approved product and technical decisions. Do not contr
 - `20261120_0001` — `app_metadata` with `schema_phase=1`
 - `20261120_0002` — users, sessions, orgs, memberships, invitations, RLS, `bizpilot_app`
 - `20261120_0003` — organization SELECT policy so INSERT RETURNING works for the creator
+- `20261120_0004` — RBAC, industries, branches (does not recreate users/orgs)
+- `20261120_0005` — org settings, warehouses, catalogue, inventory
+- `20261120_0006` — CRM, sales, purchasing, accounting, payroll
 
 ## Environment variables
 

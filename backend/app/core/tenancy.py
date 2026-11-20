@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,11 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 @dataclass
 class TenantContext:
     user_id: UUID
-    session_id: UUID
     organization_id: UUID | None
-    membership_id: UUID | None
-    is_owner: bool
-    access_all_branches: bool
+    membership_id: UUID | None = None
+    session_id: UUID | None = None
+    is_owner: bool = False
+    access_all_branches: bool = True
+    branch_id: UUID | None = None
+    permissions: frozenset[str] = field(default_factory=frozenset)
+    is_platform_admin: bool = False
+    branch_ids: frozenset[UUID] = field(default_factory=frozenset)
+
+    def can_access_branch(self, branch_id: UUID) -> bool:
+        return self.access_all_branches or branch_id in self.branch_ids
 
 
 def _quote_guc(value: str) -> str:

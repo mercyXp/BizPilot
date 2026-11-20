@@ -299,3 +299,16 @@ async def latest_outbound_email(session: AsyncSession, email: str, template: str
 async def get_user_by_id(session: AsyncSession, user_id: UUID) -> User | None:
     await apply_rls(session, user_id)
     return await session.get(User, user_id)
+
+
+def require_verified_email(user: User) -> None:
+    if user.email_verified_at is None:
+        raise ApiError(403, "email_unverified", "Verify your email before creating an organization")
+
+
+def expose_dev_token(token: str | None) -> str | None:
+    from app.core.config import get_settings
+
+    if token is None or get_settings().is_production:
+        return None
+    return token

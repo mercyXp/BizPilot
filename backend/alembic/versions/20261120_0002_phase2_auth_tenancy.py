@@ -370,6 +370,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.execute(sa.text("DROP FUNCTION IF EXISTS lookup_invitation_by_hash(text)"))
     op.execute(sa.text("DROP POLICY IF EXISTS invitations_by_email ON invitations"))
     op.execute(sa.text("DROP POLICY IF EXISTS invitations_tenant ON invitations"))
     op.execute(sa.text("DROP POLICY IF EXISTS memberships_update ON organization_memberships"))

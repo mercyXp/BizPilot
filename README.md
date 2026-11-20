@@ -6,7 +6,7 @@ This repository is a modular monolith: Next.js (`frontend/`) and FastAPI (`backe
 
 ## Current phase
 
-Phase 1 — project foundation (apps start, database connects, migrations run, health checks).
+Phases 1–2 on the main scaffold, plus ported Phase 3–9 domain modules and the public pricing/marketing UI.
 
 Architecture: `docs/TECHNICAL_RECORD.md` and `docs/phase-0/`.
 

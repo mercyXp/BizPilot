@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
@@ -14,6 +13,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Logo, LogoMark } from "@/components/ui/logo";
+import { SiteFooter } from "@/components/marketing/SiteFooter";
+import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { fadeUp, heroContainer, scaleIn, staggerContainer, withReducedMotion } from "@/lib/motion";
 import { Reveal } from "@/components/motion/Reveal";
 import { chartColors } from "@/lib/colors";
@@ -131,19 +132,7 @@ export function LandingView({ apiOk }: { apiOk: boolean }) {
         className="pointer-events-none absolute right-0 top-32 h-72 w-72 rounded-full bg-brand-soft blur-3xl animate-ambient-shift"
       />
 
-      <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <Link href="/" aria-label="BizPilot home">
-          <Logo height={36} priority />
-        </Link>
-        <nav className="flex items-center gap-2 text-sm">
-          <Button href="/sign-in" variant="ghost">
-            Sign in
-          </Button>
-          <Button href="/sign-up" arrow>
-            Create account
-          </Button>
-        </nav>
-      </header>
+      <SiteHeader active="home" />
 
       <motion.section
         className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 pb-20 pt-8 lg:grid-cols-2"
@@ -252,7 +241,7 @@ export function LandingView({ apiOk }: { apiOk: boolean }) {
                 <h3 className="text-sm font-semibold text-ink">{plan.name}</h3>
                 <p className="mt-1 text-2xl font-semibold text-ink">{plan.price}</p>
                 <p className="mt-2 text-sm text-secondary">{plan.body}</p>
-                <Button href={plan.href} className="mt-5 w-full" variant={plan.featured ? "primary" : "outline"}>
+                <Button href="/pricing" className="mt-5 w-full" variant={plan.featured ? "primary" : "outline"}>
                   {plan.cta}
                 </Button>
               </article>
@@ -282,9 +271,7 @@ export function LandingView({ apiOk }: { apiOk: boolean }) {
         </Reveal>
       </section>
 
-      <footer className="border-t border-border px-6 py-8 text-center text-xs text-muted">
-        BizPilot · Zambia-first operations · Light theme
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

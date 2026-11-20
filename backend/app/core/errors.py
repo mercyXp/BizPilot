@@ -11,11 +11,26 @@ logger = logging.getLogger(__name__)
 
 
 class ApiError(Exception):
-    def __init__(self, status_code: int, code: str, message: str) -> None:
+    def __init__(self, status_code: int, code: str, message: str, details: list | None = None) -> None:
         self.status_code = status_code
         self.code = code
         self.message = message
+        self.details = details or []
         super().__init__(message)
+
+
+class AppError(ApiError):
+    """Compatibility wrapper for stacked-phase modules (`status, message, code=`)."""
+
+    def __init__(
+        self,
+        status_code: int,
+        message: str,
+        *,
+        code: str | None = None,
+        details: list | None = None,
+    ) -> None:
+        super().__init__(status_code, code or "http_error", message, details)
 
 
 def _error_body(code: str, message: str, details: list | None = None) -> dict:
@@ -34,7 +49,7 @@ def register_error_handlers(app: FastAPI) -> None:
     async def api_error_handler(_request: Request, exc: ApiError) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
-            content=_error_body(exc.code, exc.message),
+            content=_error_body(exc.code, exc.message, exc.details),
         )
 
     @app.exception_handler(StarletteHTTPException)
