@@ -67,7 +67,7 @@ describe("store-type feature visibility", () => {
     expect(featureLabel("service", "inventory")).toBe("Services, stock levels and transfers");
     expect(featureLabel("restaurant", "inventory")).toBe("Menu items, stock levels and transfers");
     expect(featureLabel("pharmacy", "inventory")).toBe(
-      "Medicines, batches, stock levels and transfers",
+      "Medications, stock levels and transfers",
     );
     expect(featureLabel("pharmacy", "warehouses")).toBe(
       "Storage centres, with stock moved between them",
@@ -89,7 +89,7 @@ describe("store-type feature visibility", () => {
     expect(planBlurb("premium", "retail")).toMatch(/purchasing, suppliers/);
     expect(planBlurb("premium", "service")).not.toMatch(/purchas|supplier/i);
     expect(planBlurb("premium", "service")).toMatch(/services/i);
-    expect(planBlurb("premium", "pharmacy")).toMatch(/medicines/i);
+    expect(planBlurb("premium", "pharmacy")).toMatch(/medications/i);
   });
 
   it("builds a lowercase compare heading per industry", () => {
@@ -109,7 +109,7 @@ describe("store-type feature visibility", () => {
       "Purchase returns",
       "Supplier directory",
       "Customers and what they owe",
-      "Medicines, batches, stock levels and transfers",
+      "Medications, stock levels and transfers",
       "Storage centres, with stock moved between them",
       "Store sections, with sales for each section",
       "Expense tracking",

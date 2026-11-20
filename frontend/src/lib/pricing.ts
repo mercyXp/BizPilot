@@ -64,7 +64,7 @@ const INVENTORY_LABELS: Record<StoreTypeId, string> = {
   restaurant: "Menu items, stock levels and transfers",
   grocery: "Products, stock levels and transfers",
   service: "Services, stock levels and transfers",
-  pharmacy: "Medicines, batches, stock levels and transfers",
+  pharmacy: "Medications, stock levels and transfers",
   manufacturer: "Products, stock levels and transfers",
 };
 
@@ -189,7 +189,7 @@ export function planBlurb(planId: PlanId, storeType: StoreTypeId): string {
       return "Basic plus menu items, purchasing, suppliers, reports and store assistants.";
     }
     if (storeType === "pharmacy") {
-      return "Basic plus medicines, purchasing, suppliers, reports and store assistants.";
+      return "Basic plus medications, purchasing, suppliers, reports and store assistants.";
     }
     return "Basic plus inventory, purchasing, suppliers, reports and store assistants.";
   }
