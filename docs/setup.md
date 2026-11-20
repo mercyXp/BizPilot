@@ -56,11 +56,13 @@ Checks:
 
 ## Frontend
 
+This workstation’s `registry.npmjs.org` returns HTTP 403. `frontend/.npmrc` therefore uses `https://registry.npmmirror.com`. If your network can use the public npm registry, change that file.
+
 ```powershell
 cd frontend
-npm install
-npm test
-npm run dev
+pnpm install
+pnpm test
+pnpm dev
 ```
 
 Open `http://localhost:3000`. The home page fetches FastAPI readiness over `NEXT_PUBLIC_API_URL`.

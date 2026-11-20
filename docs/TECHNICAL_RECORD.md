@@ -1,12 +1,12 @@
 # BizPilot — Central Technical Record
 
 **Product:** BizPilot  
-**Status:** Phase 0 in review — awaiting approval before Phase 1  
+**Status:** Phase 1 complete  
 **Last updated:** 2026-11-20  
 **Market (initial):** Zambia  
 **Default currency:** ZMW  
 
-This file is the index of approved product and technical decisions. Phase documents live under `docs/phase-0/`. After each completed phase, this record must be updated. Do not contradict approved architecture without an explicit decision log entry.
+This file is the index of approved product and technical decisions. Do not contradict approved architecture without an explicit decision log entry.
 
 ## Document map
 
@@ -19,26 +19,56 @@ This file is the index of approved product and technical decisions. Phase docume
 | [phase-0/04-accounting-inventory-pos.md](phase-0/04-accounting-inventory-pos.md) | Posting engine, inventory movements, POS integrity |
 | [phase-0/05-ai-api-frontend.md](phase-0/05-ai-api-frontend.md) | Grok orchestration, API contracts, frontend IA |
 | [phase-0/06-roadmap-decisions-gaps.md](phase-0/06-roadmap-decisions-gaps.md) | Phases, acceptance criteria, gaps, recommended decisions |
+| [setup.md](setup.md) | Local development setup |
+| [phase-1-notes.md](phase-1-notes.md) | Phase 1 runtime notes |
 
 ## Confirmed stack
 
-- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, React Hook Form, Zod, TanStack Query, Recharts
-- Backend: Python, FastAPI, Pydantic, SQLAlchemy 2.x, Alembic, REST, Pytest
-- Data: PostgreSQL (shared schema + RLS), Redis, Celery, S3-compatible object storage
-- Auth: JWT access tokens + refresh-token rotation
-- AI: Grok API via a dedicated orchestration service; backend-executed tools only
+- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS (shadcn/ui, RHF, Zod, TanStack Query, Recharts in later UI phases)
+- Backend: Python 3.12, FastAPI 0.115.6, Pydantic 2.10.3, SQLAlchemy 2.0.36, Alembic 1.14.0, REST, Pytest 8.3.4
+- Data: PostgreSQL 18 (project-local cluster on 55432), Redis optional via `memory://` in development
+- Auth: JWT access tokens + refresh-token rotation (Phase 2)
+- AI: Grok API via orchestration (Phase 10)
 
 ## Implementation status
 
 | Phase | Name | Status |
 | --- | --- | --- |
-| 0 | Product specification and architecture | In progress — pending approval |
-| 1–15 | See roadmap document | Not started |
+| 0 | Product specification and architecture | Completed (approved by proceeding to Phase 1) |
+| 1 | Project foundation | Completed |
+| 2 | Authentication and multi-tenancy | Not started |
+| 3–15 | See roadmap | Not started |
 
-## Decision log
+## Implemented modules
 
-Decisions taken during Phase 0 (subject to your approval) are listed in `docs/phase-0/06-roadmap-decisions-gaps.md`. After approval they are copied here as binding.
+- `backend/app/core` — config, logging, errors, DB, cache, middleware
+- `backend/app/api/v1/health` — live and ready checks
+- `frontend` — Next.js 15.5.7 App Router home page consuming `/api/v1/health/ready`
 
-## Environment and secrets
+## Completed migrations
 
-No application environment files exist yet. Secrets must never be committed. Phase 1 will introduce `.env.example` only.
+- `20261120_0001` — `app_metadata` with `schema_phase=1`
+
+## Environment variables
+
+See `.env.example`. Never commit `.env`.
+
+| Variable | Purpose |
+| --- | --- |
+| `APP_ENV` | development / test / staging / production |
+| `SECRET_KEY` | reserved for Phase 2 JWT; placeholder in development |
+| `DATABASE_URL` | async SQLAlchemy URL |
+| `DATABASE_URL_SYNC` | Alembic URL |
+| `REDIS_URL` | `redis://...` or `memory://` |
+| `CORS_ORIGINS` | comma-separated browser origins |
+| `NEXT_PUBLIC_API_URL` | FastAPI origin for the Next.js app |
+
+## Decision log (binding)
+
+Phase 0 D1–D25 are approved by the instruction to proceed to Phase 1. See `docs/phase-0/06-roadmap-decisions-gaps.md`.
+
+Phase 1 additions:
+
+- **D26:** Local PostgreSQL cluster in `.data/postgres` on port 55432 when Docker is unavailable.
+- **D27:** Development may use `REDIS_URL=memory://`. Production must use Redis.
+- **D28:** This workstation cannot reach `registry.npmjs.org` (HTTP 403). Frontend installs use `https://registry.npmmirror.com` via `frontend/.npmrc`.
